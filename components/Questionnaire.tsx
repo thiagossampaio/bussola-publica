@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { LIKERT_OPTIONS } from '../constants';
 import { UserAnswer, Question } from '../types';
 import { getQuestionExplanation } from '../services/geminiService';
+import { trackEvent } from '../utils/analytics';
 
 interface QuestionnaireProps {
   questions: Question[];
@@ -58,6 +59,11 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({
     
     setAnswers(newAnswers);
     setExplanation(null);
+    trackEvent('question_answered', {
+      questionId: currentQuestion.id,
+      index: currentIndex,
+      value
+    });
 
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -70,6 +76,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setExplanation(null);
+      trackEvent('question_back_clicked', { index: currentIndex });
     }
   };
 
@@ -79,6 +86,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({
     try {
       const expl = await getQuestionExplanation(currentQuestion.text);
       setExplanation(expl);
+      trackEvent('question_help_clicked', { questionId: currentQuestion.id });
     } catch (err) {
       setExplanation("Ocorreu um erro ao buscar a explicação. Tente novamente.");
     } finally {
@@ -95,11 +103,13 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({
 
   const handleCancel = () => {
     if (answeredCount === 0 && currentIndex === 0) {
+      trackEvent('quiz_cancelled', { answered: answeredCount, index: currentIndex });
       onCancel();
       return;
     }
     const shouldExit = window.confirm("Tem certeza que deseja sair e reiniciar? Seu progresso atual será descartado.");
     if (shouldExit) {
+      trackEvent('quiz_cancelled', { answered: answeredCount, index: currentIndex });
       onCancel();
     }
   };

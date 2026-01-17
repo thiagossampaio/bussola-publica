@@ -5,10 +5,12 @@ Este roadmap foca em aumento de valor para o usuario, viralidade organica e educ
 
 ## Fase 1 — Pre-Eleicoes (0–6 semanas) — Implementada
 - Cartoes sociais personalizados com radar, classificacao e CTA neutro
+- Geracao de card social em imagem (PNG 1200x630)
 - Perfil resumido compartilhavel com 3 insights e consistencia
 - Recorte temporal no ranking (7/30 dias) para dinamismo
 - Micro-conteudos explicando cada eixo sem referencia a candidatos
 - Badges de conclusao e raridade do perfil
+- Testes de usabilidade com eventos instrumentados
 
 ## Fase 2 — Temporada de Campanha (6–12 semanas)
 - Comparador de temas eleitorais (saude, economia, educacao, seguranca)

@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { getParticipationCount } from '../services/participationService';
 import RadarVisualization from './RadarChart';
+import { trackEvent } from '../utils/analytics';
+import { getCopyVariant } from '../utils/experiments';
 
 interface LandingPageProps {
   onStart: () => void;
@@ -20,6 +22,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   resumeLabel
 }) => {
   const [participationCount, setParticipationCount] = useState<number | null>(null);
+  const copyVariant = useMemo(() => getCopyVariant(), []);
 
   useEffect(() => {
     let isMounted = true;
@@ -65,6 +68,40 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
   const showResume = hasSavedProgress && onResume;
 
+  const heroCopy = useMemo(() => {
+    if (copyVariant === 'B') {
+      return {
+        headline: 'Entenda suas escolhas antes das urnas',
+        subline: 'Responda em minutos, receba 3 insights claros e compartilhe seu perfil politico com quem voce confia.',
+        cta: 'Quero meu perfil agora'
+      };
+    }
+    return {
+      headline: 'Descubra sua bussola politica com IA',
+      subline: 'Questionario multidimensional, analise inteligente e um resumo pronto para compartilhar.',
+      cta: 'Iniciar questionario'
+    };
+  }, [copyVariant]);
+
+  useEffect(() => {
+    trackEvent('landing_viewed', { resume: showResume }, copyVariant);
+  }, [copyVariant, showResume]);
+
+  const handleStart = () => {
+    trackEvent('landing_start_clicked', { resume: false }, copyVariant);
+    onStart();
+  };
+
+  const handleResume = () => {
+    trackEvent('landing_resume_clicked', { resume: true }, copyVariant);
+    onResume?.();
+  };
+
+  const handleViewRanking = () => {
+    trackEvent('landing_ranking_clicked', undefined, copyVariant);
+    onViewRanking();
+  };
+
   return (
     <div className="flex flex-col gap-24 pb-24">
       <section id="inicio" className="relative overflow-hidden" aria-labelledby="inicio-titulo">
@@ -82,11 +119,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <h1 id="inicio-titulo" className="text-4xl md:text-6xl font-bold text-slate-900 mt-6 tracking-tight animate-fade-in-up" style={{ animationDelay: '140ms' }}>
-              Bússola <span className="text-indigo-600">Política AI</span>
+              {heroCopy.headline}
             </h1>
 
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mt-6 leading-relaxed animate-fade-in-up" style={{ animationDelay: '220ms' }}>
-              Descubra seu real posicionamento político com um questionário multidimensional e receba um resumo pronto para compartilhar.
+              {heroCopy.subline}
             </p>
 
             <div className="mt-10 flex flex-col gap-3 w-full max-w-md animate-fade-in-up" style={{ animationDelay: '300ms' }}>
@@ -94,14 +131,14 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 {showResume ? (
                   <>
                     <button
-                      onClick={onResume}
+                      onClick={handleResume}
                       className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-1 active:translate-y-0 pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
                       type="button"
                     >
                       Continuar questionário
                     </button>
                     <button
-                      onClick={onStart}
+                      onClick={handleStart}
                       className="flex-1 bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-8 rounded-xl border-2 border-slate-200 transition-all shadow-sm pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
                       type="button"
                     >
@@ -111,14 +148,14 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 ) : (
                   <>
                     <button
-                      onClick={onStart}
+                      onClick={handleStart}
                       className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-1 active:translate-y-0 pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
                       type="button"
                     >
-                      Iniciar Questionário
+                      {heroCopy.cta}
                     </button>
                     <button
-                      onClick={onViewRanking}
+                      onClick={handleViewRanking}
                       className="flex-1 bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-8 rounded-xl border-2 border-slate-200 transition-all shadow-sm pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
                       type="button"
                     >
@@ -131,7 +168,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
                   <span className="font-semibold text-slate-600">{resumeLabel ?? 'Você tem um questionário em andamento.'}</span>
                   <button
-                    onClick={onViewRanking}
+                    onClick={handleViewRanking}
                     className="text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
                     type="button"
                   >
@@ -477,14 +514,14 @@ const LandingPage: React.FC<LandingPageProps> = ({
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <button
-              onClick={onStart}
+              onClick={handleStart}
               className="bg-white text-slate-900 font-bold py-3 px-6 rounded-xl shadow-md hover:bg-slate-100 transition pressable focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               type="button"
             >
-              Iniciar Questionário
+              {heroCopy.cta}
             </button>
             <button
-              onClick={onViewRanking}
+              onClick={handleViewRanking}
               className="border border-white/40 text-white font-bold py-3 px-6 rounded-xl hover:bg-white/10 transition pressable focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               type="button"
             >

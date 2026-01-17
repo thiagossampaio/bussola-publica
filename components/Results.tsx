@@ -1,9 +1,11 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PoliticalResult, Scores } from '../types';
 import RadarVisualization from './RadarChart';
 import { saveParticipation } from '../services/participationService';
 import { getFigureComparison } from '../services/geminiService';
+import { trackEvent } from '../utils/analytics';
+import { buildShareCardSvg } from '../utils/shareCard';
 
 interface ResultsProps {
   result: PoliticalResult;
@@ -24,6 +26,10 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     message: string;
     variant: 'success' | 'error';
   } | null>(null);
+
+  useEffect(() => {
+    trackEvent('results_viewed', { classification: result.classificacao_principal });
+  }, [result.classificacao_principal]);
 
   const axisLabels: Record<keyof Scores, string> = {
     economico: 'Econômico',
@@ -113,6 +119,37 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
       'Descubra o seu e compare no ranking global.'
     ].join('\n');
   }, [axisInsights, result.classificacao_principal]);
+
+  const cardSvg = useMemo(() => {
+    const originLabel = typeof window === 'undefined' ? 'bussolapolitica.ai' : window.location.origin;
+    return buildShareCardSvg(result, originLabel);
+  }, [result]);
+
+  const cardDataUrl = useMemo(() => {
+    return `data:image/svg+xml;utf8,${encodeURIComponent(cardSvg)}`;
+  }, [cardSvg]);
+
+  const handleDownloadCard = async () => {
+    trackEvent('share_card_download', { source: 'results' });
+    const image = new Image();
+    image.src = cardDataUrl;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 630;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'bussola-politica-card.png';
+      link.click();
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  };
 
   const comparisonNote = useMemo(() => {
     if (!autoavaliacao) {
@@ -469,12 +506,54 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
           Convide amigos para comparar resultados e enriquecer o ranking global. Leva poucos minutos.
         </p>
         <button
-          onClick={handleShare}
+          onClick={async () => {
+            trackEvent('result_share_clicked', { source: 'share_section' });
+            await handleShare();
+          }}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
           type="button"
         >
           Compartilhar resultado
         </button>
+      </div>
+
+      <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Card social</p>
+            <h3 className="text-xl font-bold text-slate-800">Imagem pronta para postar</h3>
+          </div>
+          <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold">1200 x 630</span>
+        </div>
+        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+          <img src={cardDataUrl} alt="Preview do card social do seu perfil" className="w-full rounded-xl shadow-sm" />
+        </div>
+        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={handleDownloadCard}
+            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
+            type="button"
+          >
+            Baixar card em PNG
+          </button>
+          <button
+            onClick={async () => {
+              trackEvent('share_card_copy_link', { source: 'results' });
+              if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(window.location.href);
+                setModal({
+                  title: "Link copiado",
+                  message: "Envie o link junto com seu card para mais conversoes.",
+                  variant: 'success'
+                });
+              }
+            }}
+            className="flex-1 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3 rounded-2xl shadow-sm transition-all"
+            type="button"
+          >
+            Copiar link
+          </button>
+        </div>
       </div>
 
       <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-2xl mb-12">
@@ -500,6 +579,7 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
           <button
             onClick={async () => {
+              trackEvent('summary_copy_clicked', { source: 'results' });
               if (navigator.clipboard?.writeText) {
                 await navigator.clipboard.writeText(shareSummary);
                 setModal({
