@@ -46,19 +46,19 @@ O **Compass Político** foi projetado para oferecer uma experiência clara, educ
 ## Arquitetura e Stack
 
 **Frontend**
-- React + TypeScript
-- Vite (build e dev server)
+- React 19 + TypeScript
+- Vite 6 (build e dev server)
 - CSS moderno (Grid/Flexbox, variáveis CSS, animações)
 
 **Integrações**
-- Google Gemini API (Google AI Studio)
-- Firebase Firestore (ranking global)
+- Google GenAI SDK (`@google/genai`) para análise via Gemini
+- Firebase (Firestore) para ranking global
 - LocalStorage para progresso
 
 **Bibliotecas**
 - Recharts (visualizações de dados)
 - React Markdown (renderização de conteúdo)
-- Vite PWA (suporte a Progressive Web App)
+- Vite Plugin PWA (suporte a Progressive Web App)
 
 ## Requisitos
 
