@@ -8,12 +8,32 @@ export interface ParticipationDoc extends PoliticalResult {
 
 const PARTICIPATION_COLLECTION = 'bussola';
 
-export const saveParticipation = (result: PoliticalResult) => {
-  const payload: ParticipationDoc = {
-    ...result,
+const toFiniteNumber = (value: unknown, fallback: number) => {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const normalizeParticipation = (result: PoliticalResult): ParticipationDoc => {
+  return {
+    classificacao_principal: String(result.classificacao_principal || 'Indefinido'),
+    scores: {
+      economico: toFiniteNumber(result.scores?.economico, 5),
+      social: toFiniteNumber(result.scores?.social, 5),
+      cultural: toFiniteNumber(result.scores?.cultural, 5),
+      nacional: toFiniteNumber(result.scores?.nacional, 5)
+    },
+    intensidade_geral: toFiniteNumber(result.intensidade_geral, 5),
+    analise_detalhada: String(result.analise_detalhada || ''),
+    figuras_similares: Array.isArray(result.figuras_similares)
+      ? result.figuras_similares.map((item) => String(item))
+      : [],
+    confianca_classificacao: toFiniteNumber(result.confianca_classificacao, 0),
     createdAtMs: Date.now()
   };
+};
 
+export const saveParticipation = (result: PoliticalResult) => {
+  const payload = normalizeParticipation(result);
   return addDoc(collection(db, PARTICIPATION_COLLECTION), payload);
 };
 
