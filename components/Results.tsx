@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { PoliticalResult, Scores } from '../types';
 import RadarVisualization from './RadarChart';
+import { saveParticipation } from '../services/participationService';
 
 interface ResultsProps {
   result: PoliticalResult;
@@ -11,6 +12,7 @@ interface ResultsProps {
 
 const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) => {
   const [showFullAnalysis, setShowFullAnalysis] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const getScoreColor = (val: number) => {
     if (val < 4) return "bg-red-500";
@@ -18,16 +20,19 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     return "bg-slate-500";
   };
 
-  const saveToRanking = () => {
-    const existing = JSON.parse(localStorage.getItem('ranking_data') || '[]');
-    const newData = {
-      ...result,
-      timestamp: Date.now(),
-      id: Math.random().toString(36).substr(2, 9)
-    };
-    localStorage.setItem('ranking_data', JSON.stringify([...existing, newData]));
-    alert("Resultados salvos anonimamente no ranking global!");
-    onViewRanking();
+  const saveToRanking = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await saveParticipation(result);
+      alert("Resultados salvos anonimamente no ranking global!");
+      onViewRanking();
+    } catch (error) {
+      console.error("Falha ao salvar participação no Firestore", error);
+      alert("Não foi possível salvar sua participação agora. Tente novamente em instantes.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -120,9 +125,10 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
       <div className="flex flex-col sm:flex-row gap-4">
         <button 
           onClick={saveToRanking}
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl shadow-lg transition-all"
+          disabled={isSaving}
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl shadow-lg transition-all"
         >
-          Salvar no Ranking Público
+          {isSaving ? "Salvando..." : "Salvar no Ranking Público"}
         </button>
         <button 
           onClick={onRestart}

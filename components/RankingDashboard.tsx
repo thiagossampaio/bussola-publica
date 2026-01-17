@@ -1,6 +1,7 @@
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PoliticalResult, Scores } from '../types';
+import { subscribeToParticipations } from '../services/participationService';
 
 interface RankingDashboardProps {
   onBack: () => void;
@@ -8,8 +9,24 @@ interface RankingDashboardProps {
 }
 
 const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz }) => {
-  const rankingData: PoliticalResult[] = useMemo(() => {
-    return JSON.parse(localStorage.getItem('ranking_data') || '[]');
+  const [rankingData, setRankingData] = useState<PoliticalResult[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToParticipations(
+      (items) => {
+        setRankingData(items);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error("Falha ao carregar ranking do Firestore", error);
+        setErrorMessage("Não foi possível carregar o ranking agora.");
+        setIsLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
   const stats = useMemo(() => {
@@ -44,7 +61,18 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
       <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Dashboard de Rankings</h1>
       <p className="text-slate-500 mb-12">Dados coletados de forma anônima entre todos os participantes.</p>
 
-      {rankingData.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+          <p className="text-slate-400 text-lg">Carregando dados do ranking...</p>
+        </div>
+      ) : errorMessage ? (
+        <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+          <p className="text-slate-400 text-lg mb-4">{errorMessage}</p>
+          <button onClick={onTakeQuiz} className="text-indigo-600 font-bold underline decoration-2">
+            Participar mesmo assim
+          </button>
+        </div>
+      ) : rankingData.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
           <p className="text-slate-400 text-lg mb-4">Ainda não temos dados suficientes no ranking.</p>
           <button onClick={onTakeQuiz} className="text-indigo-600 font-bold underline decoration-2">
