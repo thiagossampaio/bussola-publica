@@ -9,11 +9,21 @@ interface QuestionnaireProps {
   questions: Question[];
   onComplete: (answers: UserAnswer[]) => void;
   onCancel: () => void;
+  initialAnswers?: UserAnswer[];
+  initialIndex?: number;
+  onProgress?: (payload: { answers: UserAnswer[]; currentIndex: number }) => void;
 }
 
-const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, onCancel }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<UserAnswer[]>([]);
+const Questionnaire: React.FC<QuestionnaireProps> = ({
+  questions,
+  onComplete,
+  onCancel,
+  initialAnswers,
+  initialIndex,
+  onProgress
+}) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex ?? 0);
+  const [answers, setAnswers] = useState<UserAnswer[]>(initialAnswers ?? []);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [loadingExpl, setLoadingExpl] = useState(false);
 
@@ -21,6 +31,16 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, on
   const progress = questions.length
     ? ((currentIndex + 1) / questions.length) * 100
     : 0;
+
+  useEffect(() => {
+    const safeIndex = Math.min(initialIndex ?? 0, Math.max(questions.length - 1, 0));
+    setCurrentIndex(safeIndex);
+    setAnswers(initialAnswers ?? []);
+  }, [initialAnswers, initialIndex, questions]);
+
+  useEffect(() => {
+    onProgress?.({ answers, currentIndex });
+  }, [answers, currentIndex, onProgress]);
 
   if (!questions.length) {
     return null;
@@ -67,6 +87,22 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, on
   };
 
   const currentAnswer = answers.find(a => a.questionId === currentQuestion.id)?.value;
+  const answeredCount = answers.length;
+  const remainingQuestions = Math.max(0, questions.length - (currentIndex + 1));
+  const remainingSeconds = remainingQuestions * 15;
+  const remainingMinutes = remainingSeconds <= 30 ? 0 : Math.round(remainingSeconds / 60);
+  const remainingLabel = remainingMinutes === 0 ? 'menos de 1 min' : `~${remainingMinutes} min`;
+
+  const handleCancel = () => {
+    if (answeredCount === 0 && currentIndex === 0) {
+      onCancel();
+      return;
+    }
+    const shouldExit = window.confirm("Tem certeza que deseja sair e reiniciar? Seu progresso atual será descartado.");
+    if (shouldExit) {
+      onCancel();
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
@@ -90,6 +126,11 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, on
             className="h-full bg-indigo-600 transition-all duration-500 ease-out progress-shimmer"
             style={{ width: `${progress}%` }}
           />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+          <span>{answeredCount} de {questions.length} respondidas</span>
+          <span>Tempo restante: {remainingLabel}</span>
+          <span>Progresso salvo automaticamente</span>
         </div>
       </div>
 
@@ -194,7 +235,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, on
           ← Voltar
         </button>
         <button 
-          onClick={onCancel}
+          onClick={handleCancel}
           className="text-slate-400 hover:text-red-500 font-semibold transition-colors pressable"
           type="button"
         >

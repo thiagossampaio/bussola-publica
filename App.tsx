@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AppState, UserAnswer, PoliticalResult, Question, SelfPositioningSelection } from './types';
 import { QUESTIONS, buildQuestionnaireQuestions, SELF_POSITIONING_OPTIONS } from './constants';
 import LandingPage from './components/LandingPage';
@@ -10,16 +10,75 @@ import SelfAssessment from './components/SelfAssessment';
 import { analyzePoliticalPosition } from './services/geminiService';
 import { generateBackupResult } from './utils/calculations';
 
+const PROGRESS_STORAGE_KEY = 'bp_questionnaire_progress_v1';
+
+type SavedProgress = {
+  version: 1;
+  questionSet: Question[];
+  answers: UserAnswer[];
+  currentIndex: number;
+  selfPositioning: SelfPositioningSelection | null;
+  savedAt: number;
+};
+
+const parseSavedProgress = (raw: string | null): SavedProgress | null => {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as SavedProgress;
+    if (
+      parsed?.version === 1 &&
+      Array.isArray(parsed.questionSet) &&
+      Array.isArray(parsed.answers) &&
+      typeof parsed.currentIndex === 'number'
+    ) {
+      return parsed;
+    }
+  } catch (error) {
+    console.warn('Falha ao ler progresso salvo', error);
+  }
+  return null;
+};
+
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.LANDING);
   const [result, setResult] = useState<PoliticalResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [questionSet, setQuestionSet] = useState<Question[]>([]);
   const [selfPositioning, setSelfPositioning] = useState<SelfPositioningSelection | null>(null);
+  const [savedProgress, setSavedProgress] = useState<SavedProgress | null>(null);
+  const [resumeAnswers, setResumeAnswers] = useState<UserAnswer[] | null>(null);
+  const [resumeIndex, setResumeIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const saved = parseSavedProgress(localStorage.getItem(PROGRESS_STORAGE_KEY));
+    if (saved) {
+      setSavedProgress(saved);
+    }
+  }, []);
+
+  const clearProgress = () => {
+    localStorage.removeItem(PROGRESS_STORAGE_KEY);
+    setSavedProgress(null);
+    setResumeAnswers(null);
+    setResumeIndex(null);
+  };
 
   const startQuiz = () => {
+    clearProgress();
     setSelfPositioning(null);
+    setQuestionSet([]);
+    setResult(null);
     setState(AppState.CONSENT);
+  };
+
+  const resumeQuiz = () => {
+    if (!savedProgress) return;
+    setResult(null);
+    setQuestionSet(savedProgress.questionSet);
+    setSelfPositioning(savedProgress.selfPositioning);
+    setResumeAnswers(savedProgress.answers);
+    setResumeIndex(savedProgress.currentIndex);
+    setState(AppState.QUESTIONNAIRE);
   };
 
   const handleConsent = () => {
@@ -29,10 +88,13 @@ const App: React.FC = () => {
   const handleSelfAssessment = (selection: SelfPositioningSelection) => {
     setSelfPositioning(selection);
     setQuestionSet(buildQuestionnaireQuestions());
+    setResumeAnswers(null);
+    setResumeIndex(null);
     setState(AppState.QUESTIONNAIRE);
   };
 
   const handleComplete = async (answers: UserAnswer[]) => {
+    clearProgress();
     setIsLoading(true);
     try {
       const activeQuestions = questionSet.length ? questionSet : QUESTIONS;
@@ -50,6 +112,20 @@ const App: React.FC = () => {
     }
   };
 
+  const handleProgress = (payload: { answers: UserAnswer[]; currentIndex: number }) => {
+    if (!questionSet.length) return;
+    const progress: SavedProgress = {
+      version: 1,
+      questionSet,
+      answers: payload.answers,
+      currentIndex: payload.currentIndex,
+      selfPositioning,
+      savedAt: Date.now()
+    };
+    localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progress));
+    setSavedProgress(progress);
+  };
+
   const viewRanking = () => setState(AppState.RANKING);
   const goHome = () => {
     setState(AppState.LANDING);
@@ -57,6 +133,13 @@ const App: React.FC = () => {
     setQuestionSet([]);
     setSelfPositioning(null);
   };
+
+  const resumeLabel = useMemo(() => {
+    if (!savedProgress) return null;
+    const answered = savedProgress.answers.length;
+    const total = savedProgress.questionSet.length;
+    return `Você respondeu ${answered} de ${total} perguntas`;
+  }, [savedProgress]);
 
   const isLanding = state === AppState.LANDING;
 
@@ -120,7 +203,13 @@ const App: React.FC = () => {
         )}
 
         {state === AppState.LANDING && (
-          <LandingPage onStart={startQuiz} onViewRanking={viewRanking} />
+          <LandingPage
+            onStart={startQuiz}
+            onViewRanking={viewRanking}
+            hasSavedProgress={Boolean(savedProgress)}
+            onResume={resumeQuiz}
+            resumeLabel={resumeLabel ?? undefined}
+          />
         )}
 
         {state === AppState.CONSENT && (
@@ -128,6 +217,7 @@ const App: React.FC = () => {
             <h2 className="text-3xl font-bold text-slate-900 mb-6">Antes de começar</h2>
             <div className="space-y-4 text-slate-600 mb-8">
               <p>Este questionário utiliza Inteligência Artificial avançada para analisar seu posicionamento. Responda com honestidade para obter o melhor resultado.</p>
+              <p>Leva em média 4 minutos, não exige cadastro e você pode retomar depois se precisar.</p>
               <div className="bg-slate-50 p-4 rounded-xl flex gap-3 items-start border border-slate-200">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -161,7 +251,13 @@ const App: React.FC = () => {
           <Questionnaire
             questions={questionSet}
             onComplete={handleComplete}
-            onCancel={goHome}
+            onCancel={() => {
+              clearProgress();
+              goHome();
+            }}
+            initialAnswers={resumeAnswers ?? undefined}
+            initialIndex={resumeIndex ?? undefined}
+            onProgress={handleProgress}
           />
         )}
 
@@ -227,6 +323,7 @@ const App: React.FC = () => {
             <a className="block text-slate-500 hover:text-slate-700" href="#como-funciona">Como funciona</a>
             <a className="block text-slate-500 hover:text-slate-700" href="#metodologia">Metodologia</a>
             <a className="block text-slate-500 hover:text-slate-700" href="#graficos">Gráficos</a>
+            <a className="block text-slate-500 hover:text-slate-700" href="#faq">FAQ</a>
           </div>
 
           <div className="space-y-3 text-sm">

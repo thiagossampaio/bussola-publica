@@ -7,9 +7,18 @@ import RadarVisualization from './RadarChart';
 interface LandingPageProps {
   onStart: () => void;
   onViewRanking: () => void;
+  hasSavedProgress?: boolean;
+  onResume?: () => void;
+  resumeLabel?: string;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => {
+const LandingPage: React.FC<LandingPageProps> = ({
+  onStart,
+  onViewRanking,
+  hasSavedProgress = false,
+  onResume,
+  resumeLabel
+}) => {
   const [participationCount, setParticipationCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -54,6 +63,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
     { label: 'Concordo', value: 47 },
   ];
 
+  const showResume = hasSavedProgress && onResume;
+
   return (
     <div className="flex flex-col gap-24 pb-24">
       <section id="inicio" className="relative overflow-hidden" aria-labelledby="inicio-titulo">
@@ -78,21 +89,56 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
               Descubra seu real posicionamento político através de um questionário multidimensional analisado por Inteligência Artificial avançada.
             </p>
 
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 w-full max-w-md animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-              <button
-                onClick={onStart}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-1 active:translate-y-0 pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
-                type="button"
-              >
-                Iniciar Questionário
-              </button>
-              <button
-                onClick={onViewRanking}
-                className="flex-1 bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-8 rounded-xl border-2 border-slate-200 transition-all shadow-sm pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
-                type="button"
-              >
-                Ver Ranking Global
-              </button>
+            <div className="mt-10 flex flex-col gap-3 w-full max-w-md animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+              <div className="flex flex-col sm:flex-row gap-4 w-full">
+                {showResume ? (
+                  <>
+                    <button
+                      onClick={onResume}
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-1 active:translate-y-0 pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+                      type="button"
+                    >
+                      Continuar questionário
+                    </button>
+                    <button
+                      onClick={onStart}
+                      className="flex-1 bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-8 rounded-xl border-2 border-slate-200 transition-all shadow-sm pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+                      type="button"
+                    >
+                      Recomeçar do zero
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={onStart}
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-1 active:translate-y-0 pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+                      type="button"
+                    >
+                      Iniciar Questionário
+                    </button>
+                    <button
+                      onClick={onViewRanking}
+                      className="flex-1 bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-8 rounded-xl border-2 border-slate-200 transition-all shadow-sm pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+                      type="button"
+                    >
+                      Ver Ranking Global
+                    </button>
+                  </>
+                )}
+              </div>
+              {showResume ? (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
+                  <span className="font-semibold text-slate-600">{resumeLabel ?? 'Você tem um questionário em andamento.'}</span>
+                  <button
+                    onClick={onViewRanking}
+                    className="text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
+                    type="button"
+                  >
+                    Ver Ranking Global →
+                  </button>
+                </div>
+              ) : null}
             </div>
 
             <div className="mt-12 flex flex-wrap items-center gap-6 text-slate-500 animate-fade-in-up" style={{ animationDelay: '380ms' }}>
@@ -112,6 +158,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
               </div>
               <div className="text-sm font-semibold text-slate-600" aria-live="polite">{countLabel}</div>
               <div className="text-sm text-slate-400">Tempo médio: 4 minutos</div>
+            </div>
+
+            <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-slate-500">
+              {[
+                { label: 'Sem cadastro', value: 'Acesso imediato' },
+                { label: '100% gratuito', value: 'Sem paywall' },
+                { label: 'Anônimo', value: 'Dados agregados' },
+                { label: 'Resultado claro', value: 'Comparação IA' }
+              ].map((item) => (
+                <div key={item.label} className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm">
+                  <p className="text-slate-700 font-semibold">{item.label}</p>
+                  <p className="text-slate-400 mt-1">{item.value}</p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -323,6 +383,41 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
               A distribuição acima é um exemplo ilustrativo baseado em respostas agregadas.
             </p>
           </div>
+        </div>
+      </section>
+
+      <section id="faq" className="max-w-5xl mx-auto px-6" aria-labelledby="faq-titulo">
+        <div className="text-center mb-10">
+          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Dúvidas frequentes</p>
+          <h2 id="faq-titulo" className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">Respostas rápidas antes de começar</h2>
+          <p className="text-slate-600 mt-3 max-w-2xl mx-auto">
+            Removemos as principais barreiras para você iniciar o questionário agora mesmo.
+          </p>
+        </div>
+        <div className="grid gap-4">
+          {[
+            {
+              title: 'Preciso criar conta?',
+              description: 'Não. O teste é instantâneo e não solicita dados pessoais.'
+            },
+            {
+              title: 'Quanto tempo leva?',
+              description: 'Em média 4 minutos. Mostramos o progresso e você pode retomar depois.'
+            },
+            {
+              title: 'Meus dados são públicos?',
+              description: 'Somente o resultado agregado aparece no ranking, sem identificação.'
+            },
+            {
+              title: 'Posso comparar com minha autoavaliação?',
+              description: 'Sim. O resultado final mostra a diferença entre sua percepção e a análise da IA.'
+            }
+          ].map((item) => (
+            <div key={item.title} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+              <h3 className="text-sm font-bold text-slate-900">{item.title}</h3>
+              <p className="text-sm text-slate-600 mt-2">{item.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 

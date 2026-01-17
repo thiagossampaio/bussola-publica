@@ -85,6 +85,38 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     }
   };
 
+  const handleShare = async () => {
+    const shareText = `Meu perfil na Bússola Política AI: ${result.classificacao_principal}. Faça o teste e compare seu resultado!`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Bússola Política AI',
+          text: shareText,
+          url: window.location.href
+        });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(`${shareText} ${window.location.origin}`);
+      } else {
+        throw new Error('Compartilhamento indisponível');
+      }
+      setModal({
+        title: "Link pronto para compartilhar",
+        message: "Copiamos seu resultado. Convide mais pessoas para responder.",
+        variant: 'success'
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return;
+      }
+      console.error("Falha ao compartilhar resultado", error);
+      setModal({
+        title: "Não foi possível compartilhar",
+        message: "Tente novamente ou copie o link manualmente.",
+        variant: 'error'
+      });
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 animate-in fade-in duration-1000">
       {modal && (
@@ -341,6 +373,20 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <h3 className="text-xl font-bold text-slate-800 mb-3">Compartilhe sua bússola</h3>
+        <p className="text-slate-600 mb-6">
+          Convide amigos para comparar resultados e enriquecer o ranking global. Leva poucos minutos.
+        </p>
+        <button
+          onClick={handleShare}
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
+          type="button"
+        >
+          Compartilhar resultado
+        </button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
