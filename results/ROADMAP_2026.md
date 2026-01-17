@@ -12,12 +12,24 @@ Este roadmap foca em aumento de valor para o usuario, viralidade organica e educ
 - Badges de conclusao e raridade do perfil
 - Testes de usabilidade com eventos instrumentados
 
-## Fase 2 — Temporada de Campanha (6–12 semanas)
+## Fase 2 — Temporada de Campanha (6–12 semanas) — Implementada
 - Comparador de temas eleitorais (saude, economia, educacao, seguranca)
 - Radar de prioridades pessoais e contraste com o perfil politico
 - Mapa do Brasil opt-in com distribuicao agregada por UF
 - Modo debate saudavel com explicacoes neutras
 - Timeline de mudanca para quem refaz o teste
+
+### Fluxos-chave da Fase 2
+- Fluxo "Comparador de Temas": resultados -> comparador -> chamada para debate neutro
+- Fluxo "Radar de Prioridades": radar pessoal -> contraste com perfil -> dicas de contexto
+- Fluxo "Mapa Opt-in": convite explicito -> consentimento -> visualizacao agregada
+- Fluxo "Modo Debate": explicacoes neutras -> perguntas guia -> compartilhamento responsavel
+- Fluxo "Timeline": refazer teste -> ver evolucao -> convite para comparacao
+
+### Ajustes de UX/UI (Fase 2)
+- Copys mais diretas para comparacao de prioridades e debates saudaveis
+- Graficos focados em comparacao (perfil x prioridades) e evolucao temporal
+- Sinalizacao clara de opt-in e dados agregados
 
 ## Fase 3 — Pico Eleitoral (12–20 semanas)
 - Digest semanal de tendencias agregadas

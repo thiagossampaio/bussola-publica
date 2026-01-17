@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Scores } from '../types';
 import { ParticipationDoc, subscribeToParticipations } from '../services/participationService';
 import { trackEvent } from '../utils/analytics';
+import { UF_OPTIONS } from '../constants';
 
 interface RankingDashboardProps {
   onBack: () => void;
@@ -66,6 +67,37 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
     if (timeRange === '30d') return 'Últimos 30 dias';
     return 'Total acumulado';
   }, [timeRange]);
+
+  const ufStats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    filteredRanking.forEach((item) => {
+      if (item.uf && item.ufOptIn) {
+        counts[item.uf] = (counts[item.uf] || 0) + 1;
+      }
+    });
+    const values = Object.values(counts);
+    const maxCount = values.length ? Math.max(...values) : 0;
+    const getIntensityClass = (count: number) => {
+      if (maxCount === 0 || count === 0) return 'bg-slate-100';
+      const ratio = count / maxCount;
+      if (ratio > 0.66) return 'bg-indigo-600';
+      if (ratio > 0.33) return 'bg-indigo-400';
+      return 'bg-indigo-200';
+    };
+
+    const heatmap = UF_OPTIONS.map((option) => ({
+      uf: option.value,
+      label: option.label,
+      count: counts[option.value] || 0,
+      color: getIntensityClass(counts[option.value] || 0),
+    }));
+
+    return {
+      heatmap,
+      total: values.reduce((acc, curr) => acc + curr, 0),
+      maxCount,
+    };
+  }, [filteredRanking]);
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
@@ -176,6 +208,49 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
               Participações no período: {filteredRanking.length}
             </p>
           </div>
+        </div>
+      )}
+
+      {!isLoading && !errorMessage && filteredRanking.length > 0 && (
+        <div className="mt-10 bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Mapa do Brasil</p>
+              <h3 className="text-xl font-bold text-slate-800">Distribuição por UF (opt-in)</h3>
+            </div>
+            <span className="text-xs font-semibold text-slate-400">Dados agregados</span>
+          </div>
+          {ufStats.total === 0 ? (
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm text-slate-500">
+              Ainda não há UFs suficientes para exibir o mapa. Assim que houver opt-ins, o mapa será preenchido.
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-12 gap-2" role="img" aria-label="Mapa ilustrativo por unidade federativa">
+                {ufStats.heatmap.map((item) => (
+                  <div
+                    key={item.uf}
+                    className={`rounded-xl px-2 py-3 text-xs font-semibold text-slate-700 text-center ${item.color}`}
+                    title={`${item.label}: ${item.count}`}
+                  >
+                    {item.uf}
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between text-xs text-slate-400 mt-5">
+                <span>Baixa</span>
+                <span className="flex items-center gap-2">
+                  <span className="h-2 w-8 rounded-full bg-indigo-200" aria-hidden="true"></span>
+                  <span className="h-2 w-8 rounded-full bg-indigo-400" aria-hidden="true"></span>
+                  <span className="h-2 w-8 rounded-full bg-indigo-600" aria-hidden="true"></span>
+                </span>
+                <span>Alta</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-4">
+                O mapa aparece apenas quando o usuario permite compartilhar a UF. Sem dados pessoais.
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@
 
 # Compass Político
 
-Aplicação web responsiva que ajuda usuários a descobrirem seu posicionamento político por meio de um questionário cientificamente fundamentado, com análise em tempo real via Google Gemini e visualização multidimensional dos resultados.
+Aplicação web responsiva que ajuda usuários a descobrirem seu posicionamento político por meio de um questionário cientificamente fundamentado, com análise em tempo real via Google Gemini, comparadores de temas e visualização multidimensional dos resultados.
 
 ## Índice
 
@@ -47,6 +47,11 @@ O **Compass Político** foi projetado para oferecer uma experiência clara, educ
 - Ranking global com recortes por período (7 dias, 30 dias, total)
 - Instrumentação de eventos para testes de usabilidade (analytics local)
 - Opção de refazer o teste e visualizar ranking global
+- Comparador de temas eleitorais (saúde, economia, educação, segurança)
+- Radar de prioridades pessoais com contraste ao perfil político
+- Mapa do Brasil opt-in com distribuição agregada por UF
+- Modo debate saudável com explicações neutras de divergências
+- Timeline de mudança para quem refaz o questionário
 
 ## Arquitetura e Stack
 
@@ -153,6 +158,11 @@ window.dataLayer.push({
 - `share_card_copy_link`
 - `ranking_range_changed`
 - `summary_copy_clicked`
+- `theme_comparator_viewed`
+- `priority_radar_completed`
+- `region_opt_in_confirmed`
+- `debate_mode_opened`
+- `retake_timeline_viewed`
 
 ### 5) A/B Teste (GTM + GA4)
 

@@ -37,6 +37,10 @@ graph TD
     V --> X[Exibir Scores Detalhados]
     V --> Y[Exibir Análise Textual]
     V --> Z[Exibir Figuras Similares]
+    V --> BA[Comparador de Temas]
+    V --> BB[Radar de Prioridades]
+    V --> BC[Modo Debate Saudavel]
+    V --> BD[Timeline de Mudanca]
     
     V --> AA{Ação do Usuário}
     AA -->|Salvar no Ranking| AB[Armazenar Dados Anônimos]
@@ -49,6 +53,8 @@ graph TD
     R --> AE[Exibir Distribuição Geral]
     R --> AF[Exibir Scores Médios]
     R --> AG[Comparar com Usuário]
+    R --> AI[Opt-in de UF]
+    AI --> AJ[Mapa Agregado por UF]
     
     R --> AH{Nova Ação}
     AH -->|Fazer Questionário| D

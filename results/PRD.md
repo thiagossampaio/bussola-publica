@@ -124,6 +124,13 @@ O aplicativo utilizará um modelo multidimensional baseado em:
 - **RF033**: Atualização em tempo real dos dados
 - **RF034**: Filtros por período (última semana, mês, ano, total)
 
+#### **Fase 6: Temporada de Campanha (Fase 2)**
+- **RF034.1**: Comparador de temas eleitorais (saúde, economia, educação, segurança)
+- **RF034.2**: Radar de prioridades pessoais com contraste ao perfil político
+- **RF034.3**: Mapa do Brasil opt-in com distribuição agregada por UF
+- **RF034.4**: Modo debate saudável com explicações neutras sobre divergências
+- **RF034.5**: Timeline de mudança ao refazer o questionário
+
 ### 3.2 Sistema de Explicações (Gemini Assistant)
 - **RF035**: Modal ou sidebar com chat Gemini
 - **RF036**: Usuário pode perguntar sobre qualquer questão
@@ -378,18 +385,25 @@ Combinação dos eixos principais:
 #### **Landing Page**
 ```
 [Hero Section]
-- Headline impactante: "Descubra seu verdadeiro posicionamento político"
-- Subheadline: "Análise científica com inteligência artificial"
+- Headline impactante: "Compare suas prioridades com o cenário nacional"
+- Subheadline: "Comparador de temas, radar e mapa opt-in"
 - CTA button destacado
 - Ilustração/animação conceitual
 
 [Como Funciona]
-- 3 passos visuais
-- Badges de credibilidade (científico, privado, rápido)
+- 4 passos visuais com comparadores de temas e timeline
+- Badges de credibilidade (científico, privado, opt-in)
 
 [Estatísticas]
 - Contador de participantes
 - Preview de gráfico de distribuição
+
+[Fase 2]
+- Comparador de temas
+- Radar de prioridades
+- Modo debate saudável
+- Mapa opt-in por UF
+- Timeline de mudança
 
 [Footer]
 - Sobre o projeto
@@ -424,6 +438,7 @@ Combinação dos eixos principais:
 [Visualização Principal]
 - Gráfico radar central (grande e impactante)
 - Scores numéricos ao redor do radar
+- Radar de prioridades pessoais (fase 2)
 
 [Classificação]
 - Badge com classificação principal
@@ -436,6 +451,15 @@ Combinação dos eixos principais:
 [Contexto]
 - "O que isso significa?"
 - Figuras políticas similares (com disclaimer)
+
+[Comparador de temas]
+- Barras com contraste entre perfil e prioridades
+
+[Modo debate saudável]
+- Explicações neutras sobre divergências
+
+[Timeline]
+- Evolução do perfil para quem refaz o teste
 
 [Ações]
 - Compartilhar (Twitter, Facebook, WhatsApp, LinkedIn)
@@ -454,6 +478,7 @@ Combinação dos eixos principais:
 - Gráfico de pizza/donut: Distribuição geral
 - Gráficos de barras: Cada dimensão separadamente
 - Heatmap: Distribuição bidimensional (econômico x social)
+- Mapa por UF (opt-in)
 
 [Estatísticas]
 - Total de participantes

@@ -1,17 +1,24 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { PoliticalResult, Scores } from '../types';
 import RadarVisualization from './RadarChart';
 import { saveParticipation } from '../services/participationService';
 import { getFigureComparison } from '../services/geminiService';
 import { trackEvent } from '../utils/analytics';
 import { buildShareCardSvg } from '../utils/shareCard';
+import { UF_OPTIONS } from '../constants';
 
 interface ResultsProps {
   result: PoliticalResult;
   onRestart: () => void;
   onViewRanking: () => void;
 }
+
+const PRIORITIES_STORAGE_KEY = 'bp_priority_scores_v1';
+const UF_STORAGE_KEY = 'bp_uf_selected_v1';
+const UF_OPTIN_STORAGE_KEY = 'bp_uf_optin_v1';
+const HISTORY_STORAGE_KEY = 'bp_results_history_v1';
 
 const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) => {
   const [showFullAnalysis, setShowFullAnalysis] = useState(false);
@@ -21,6 +28,19 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const autoavaliacao = result.autoavaliacao ?? null;
   const autoScores = autoavaliacao?.scores ?? null;
+  const defaultPriorityScores: Scores = {
+    economico: 5,
+    social: 5,
+    cultural: 5,
+    nacional: 5,
+  };
+  const [priorityScores, setPriorityScores] = useState<Scores>(defaultPriorityScores);
+  const [prioritiesSaved, setPrioritiesSaved] = useState(false);
+  const [ufOptIn, setUfOptIn] = useState(false);
+  const [ufSelected, setUfSelected] = useState('');
+  const [debateOpen, setDebateOpen] = useState(false);
+  const [timelineOpen, setTimelineOpen] = useState(false);
+  const [history, setHistory] = useState<Array<{ timestamp: number; scores: Scores }>>([]);
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -30,6 +50,51 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
   useEffect(() => {
     trackEvent('results_viewed', { classification: result.classificacao_principal });
   }, [result.classificacao_principal]);
+
+  useEffect(() => {
+    trackEvent('theme_comparator_viewed');
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storedPriorities = localStorage.getItem(PRIORITIES_STORAGE_KEY);
+    if (storedPriorities) {
+      try {
+        const parsed = JSON.parse(storedPriorities) as Scores;
+        setPriorityScores({
+          economico: Number.isFinite(parsed.economico) ? parsed.economico : 5,
+          social: Number.isFinite(parsed.social) ? parsed.social : 5,
+          cultural: Number.isFinite(parsed.cultural) ? parsed.cultural : 5,
+          nacional: Number.isFinite(parsed.nacional) ? parsed.nacional : 5,
+        });
+        setPrioritiesSaved(true);
+      } catch {
+        setPrioritiesSaved(false);
+      }
+    }
+    const storedUf = localStorage.getItem(UF_STORAGE_KEY);
+    const storedOptIn = localStorage.getItem(UF_OPTIN_STORAGE_KEY);
+    if (storedUf) setUfSelected(storedUf);
+    if (storedOptIn) setUfOptIn(storedOptIn === 'true');
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const entry = {
+      timestamp: result.timestamp ?? Date.now(),
+      scores: result.scores,
+    };
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Array<{ timestamp: number; scores: Scores }>) : [];
+    const last = parsed[parsed.length - 1];
+    const isDuplicate =
+      last &&
+      Math.abs(entry.timestamp - last.timestamp) < 60000 &&
+      Object.keys(entry.scores).every((key) => entry.scores[key as keyof Scores] === last.scores[key as keyof Scores]);
+    const next = isDuplicate ? parsed : [...parsed, entry].slice(-6);
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(next));
+    setHistory(next);
+  }, [result]);
 
   const axisLabels: Record<keyof Scores, string> = {
     economico: 'Econômico',
@@ -159,11 +224,89 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     return `Você se declarou "${label}". A IA analisou suas respostas e apontou "${result.classificacao_principal}".`;
   }, [autoavaliacao, result.classificacao_principal]);
 
+  const themeComparatorData = useMemo(() => {
+    const toPercent = (value: number) => Math.round(Math.min(10, Math.max(0, value)) * 10);
+    const clampPercent = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
+    const profile = {
+      economico: toPercent(result.scores.economico),
+      social: toPercent(result.scores.social),
+      cultural: toPercent(result.scores.cultural),
+      nacional: toPercent(result.scores.nacional),
+    };
+    const priorities = {
+      economico: toPercent(priorityScores.economico),
+      social: toPercent(priorityScores.social),
+      cultural: toPercent(priorityScores.cultural),
+      nacional: toPercent(priorityScores.nacional),
+    };
+
+    return [
+      {
+        tema: 'Saúde',
+        perfil: clampPercent((100 - profile.economico + profile.social) / 2),
+        prioridade: clampPercent((priorities.economico + priorities.social) / 2),
+      },
+      {
+        tema: 'Economia',
+        perfil: clampPercent(profile.economico),
+        prioridade: clampPercent(priorities.economico),
+      },
+      {
+        tema: 'Educação',
+        perfil: clampPercent((profile.cultural + profile.social) / 2),
+        prioridade: clampPercent((priorities.cultural + priorities.social) / 2),
+      },
+      {
+        tema: 'Segurança',
+        perfil: clampPercent((profile.social + profile.nacional) / 2),
+        prioridade: clampPercent((priorities.social + priorities.nacional) / 2),
+      },
+    ];
+  }, [priorityScores, result.scores]);
+
+  const timelineData = useMemo(() => {
+    const entries = history.length
+      ? history
+      : [{ timestamp: result.timestamp ?? Date.now(), scores: result.scores }];
+    return entries.slice(-5).map((entry) => ({
+      label: new Date(entry.timestamp).toLocaleDateString('pt-BR', {
+        month: 'short',
+        day: '2-digit',
+      }),
+      score: entry.scores.economico,
+    }));
+  }, [history, result.scores, result.timestamp]);
+
+  const hasTimeline = history.length > 1;
+
+  const debateHighlights = useMemo(() => {
+    const strongest = axisInsights[0];
+    const secondary = axisInsights[1];
+    return [
+      strongest
+        ? `Seu maior contraste aparece em ${strongest.label.toLowerCase()}, o que indica espaço para conversas mais detalhadas.`
+        : 'Seu perfil mostra equilibrio entre eixos, o que favorece conversas construtivas.',
+      secondary
+        ? `Em ${secondary.label.toLowerCase()}, ha nuances que podem gerar boas perguntas para o debate.`
+        : 'As variacoes entre eixos sugerem que seu perfil nao segue um unico bloco ideologico.',
+      'Use explicacoes neutras para comparar argumentos sem reduzir pessoas a rotulos.',
+    ];
+  }, [axisInsights]);
+
+  const resultPayload = useMemo(() => {
+    return {
+      ...result,
+      prioridades: prioritiesSaved ? priorityScores : null,
+      uf: ufOptIn && ufSelected ? ufSelected : null,
+      ufOptIn,
+    };
+  }, [result, prioritiesSaved, priorityScores, ufOptIn, ufSelected]);
+
   const saveToRanking = async () => {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      await saveParticipation(result);
+      await saveParticipation(resultPayload);
       setModal({
         title: "Participação registrada!",
         message: "Resultados salvos anonimamente no ranking global.",
@@ -186,6 +329,60 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     setAnalysisTarget(null);
     setAnalysisText(null);
     setAnalysisLoading(false);
+  };
+
+  const handlePriorityChange = (key: keyof Scores, value: number) => {
+    setPriorityScores((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSavePriorities = () => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(PRIORITIES_STORAGE_KEY, JSON.stringify(priorityScores));
+    setPrioritiesSaved(true);
+    trackEvent('priority_radar_completed');
+    setModal({
+      title: 'Prioridades salvas',
+      message: 'Atualizamos seu radar de prioridades para comparar com o perfil.',
+      variant: 'success',
+    });
+  };
+
+  const handleToggleDebate = () => {
+    const next = !debateOpen;
+    setDebateOpen(next);
+    if (next) {
+      trackEvent('debate_mode_opened');
+    }
+  };
+
+  const handleToggleTimeline = () => {
+    const next = !timelineOpen;
+    setTimelineOpen(next);
+    if (next) {
+      trackEvent('retake_timeline_viewed');
+    }
+  };
+
+  const handleConfirmUfOptIn = () => {
+    if (!ufSelected) {
+      setModal({
+        title: 'Selecione sua UF',
+        message: 'Escolha uma UF para contribuir com o mapa agregado.',
+        variant: 'error',
+      });
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(UF_STORAGE_KEY, ufSelected);
+      localStorage.setItem(UF_OPTIN_STORAGE_KEY, 'true');
+    }
+    setUfOptIn(true);
+    trackEvent('region_opt_in_confirmed', { uf: ufSelected });
+    setModal({
+      title: 'Obrigado pelo opt-in',
+      message: 'Sua UF será registrada de forma agregada e anonima.',
+      variant: 'success',
+    });
   };
 
   const handleFigureAnalysis = async (figure: string) => {
@@ -450,6 +647,187 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
         )}
       </div>
 
+      <section id="prioridades" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Radar de prioridades</p>
+            <h3 className="text-2xl font-bold text-slate-800">Defina o que pesa mais para voce</h3>
+          </div>
+          <span className="text-xs font-semibold text-slate-400">Fase 2</span>
+        </div>
+        <div className="grid lg:grid-cols-[1fr_1fr] gap-8">
+          <div className="space-y-5">
+            <p className="text-sm text-slate-600">
+              Ajuste sua importancia por eixo. Isso alimenta o comparador de temas e o radar de prioridades.
+            </p>
+            {([
+              { key: 'economico', label: 'Economia', desc: 'Estado x mercado' },
+              { key: 'social', label: 'Sociedade', desc: 'Liberdades e ordem' },
+              { key: 'cultural', label: 'Cultura', desc: 'Tradicao e inovacao' },
+              { key: 'nacional', label: 'Nacao', desc: 'Soberania e cooperacao' },
+            ] as Array<{ key: keyof Scores; label: string; desc: string }>).map((item) => (
+              <div key={item.key} className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                <div className="flex items-center justify-between text-sm font-semibold text-slate-700">
+                  <span>{item.label}</span>
+                  <span className="text-indigo-600">{priorityScores[item.key].toFixed(0)}/10</span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">{item.desc}</p>
+                <input
+                  type="range"
+                  min={0}
+                  max={10}
+                  step={1}
+                  value={priorityScores[item.key]}
+                  onChange={(event) => handlePriorityChange(item.key, Number(event.target.value))}
+                  className="w-full mt-3 accent-indigo-600"
+                  aria-label={`Prioridade em ${item.label}`}
+                />
+              </div>
+            ))}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleSavePriorities}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-xl shadow-sm transition-all"
+                type="button"
+              >
+                Salvar prioridades
+              </button>
+              <span className="text-xs text-slate-400">
+                {prioritiesSaved ? 'Prioridades atualizadas.' : 'Salve para usar no comparador.'}
+              </span>
+            </div>
+          </div>
+          <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Comparacao</p>
+                <h4 className="text-lg font-bold text-slate-800">Perfil x prioridades</h4>
+              </div>
+              <span className="text-xs text-slate-400">Radar</span>
+            </div>
+            <RadarVisualization
+              scores={result.scores}
+              comparisonScores={priorityScores}
+              comparisonLabel="Prioridades"
+              ariaLabel="Radar com perfil politico e prioridades pessoais"
+            />
+            <div className="flex items-center justify-center gap-4 text-xs text-slate-400 mt-3">
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-indigo-600" aria-hidden="true"></span>
+                Perfil
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden="true"></span>
+                Prioridades
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="comparador" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Comparador de temas</p>
+            <h3 className="text-2xl font-bold text-slate-800">Prioridades vs perfil nos temas da campanha</h3>
+          </div>
+          <span className="text-xs font-semibold text-slate-400">Saude, economia, educacao, seguranca</span>
+        </div>
+        <div className="h-72" role="img" aria-label="Gráfico de barras com comparador de temas">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={themeComparatorData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="tema" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }} />
+              <Bar dataKey="perfil" fill="#6366f1" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="prioridade" fill="#fbbf24" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <p className="text-xs text-slate-400 mt-4">
+          {prioritiesSaved
+            ? 'Comparacao atualizada com suas prioridades salvas.'
+            : 'Defina suas prioridades para um comparador mais fiel ao que voce valoriza.'}
+        </p>
+      </section>
+
+      <section id="debate" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Modo debate saudavel</p>
+            <h3 className="text-2xl font-bold text-slate-800">Transforme divergencias em conversa</h3>
+          </div>
+          <button
+            onClick={handleToggleDebate}
+            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+            type="button"
+          >
+            {debateOpen ? 'Fechar modo debate' : 'Abrir modo debate'}
+          </button>
+        </div>
+        {debateOpen && (
+          <div className="mt-6 space-y-4 text-sm text-slate-600">
+            {debateHighlights.map((item) => (
+              <div key={item} className="flex items-start gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-indigo-500" aria-hidden="true"></span>
+                <span>{item}</span>
+              </div>
+            ))}
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-indigo-700 text-sm">
+              Use perguntas abertas e escuta ativa. Foque no que cada tema significa para a vida cotidiana.
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section id="timeline" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Timeline de mudanca</p>
+            <h3 className="text-2xl font-bold text-slate-800">Evolucao do perfil ao refazer o teste</h3>
+          </div>
+          <button
+            onClick={handleToggleTimeline}
+            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+            type="button"
+          >
+            {timelineOpen ? 'Ocultar timeline' : 'Ver timeline'}
+          </button>
+        </div>
+        {timelineOpen && (
+          <div className="mt-6">
+            {hasTimeline ? (
+              <div className="h-64" role="img" aria-label="Gráfico de linha com evolução do eixo economico">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={timelineData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 10]} tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }} />
+                    <Line type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2} dot />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm text-slate-500">
+                Refaça o teste para visualizar sua evolucao ao longo do tempo.
+              </div>
+            )}
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                onClick={onRestart}
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                type="button"
+              >
+                Refazer questionario
+              </button>
+              <span className="text-xs text-slate-400">Cada refacao adiciona um novo ponto na linha.</span>
+            </div>
+          </div>
+        )}
+      </section>
+
       <div className="bg-indigo-900 text-white p-8 rounded-3xl shadow-2xl mb-12">
         <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -609,6 +987,56 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
           </button>
         </div>
       </div>
+
+      <section id="mapa-optin" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Mapa do Brasil (opt-in)</p>
+            <h3 className="text-2xl font-bold text-slate-800">Compartilhe sua UF de forma anonima</h3>
+          </div>
+          <span className="text-xs font-semibold text-slate-400">Opcional</span>
+        </div>
+        <div className="space-y-4">
+          <label className="flex items-start gap-3 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={ufOptIn}
+              onChange={(event) => setUfOptIn(event.target.checked)}
+              className="mt-1 accent-indigo-600"
+            />
+            <span>
+              Quero contribuir com o mapa agregado por UF. Nenhum dado pessoal e coletado.
+            </span>
+          </label>
+          <div className="grid md:grid-cols-[1fr_auto] gap-3">
+            <select
+              value={ufSelected}
+              onChange={(event) => setUfSelected(event.target.value)}
+              className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700"
+              disabled={!ufOptIn}
+              aria-label="Selecione sua UF"
+            >
+              <option value="">Selecione sua UF</option>
+              {UF_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleConfirmUfOptIn}
+              disabled={!ufOptIn || !ufSelected}
+              className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold px-5 py-3 rounded-xl transition-all"
+              type="button"
+            >
+              Confirmar opt-in
+            </button>
+          </div>
+          <p className="text-xs text-slate-400">
+            Ao salvar no ranking, sua UF aparecera somente em dados agregados.
+          </p>
+        </div>
+      </section>
 
       <div className="flex flex-col sm:flex-row gap-4">
         <button 

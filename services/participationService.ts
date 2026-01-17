@@ -28,6 +28,9 @@ const normalizeParticipation = (result: PoliticalResult): ParticipationDoc => {
       ? result.figuras_similares.map((item) => String(item))
       : [],
     confianca_classificacao: toFiniteNumber(result.confianca_classificacao, 0),
+    prioridades: result.prioridades ?? null,
+    uf: result.uf ?? null,
+    ufOptIn: Boolean(result.ufOptIn),
     createdAtMs: Date.now()
   };
 };

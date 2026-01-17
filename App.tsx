@@ -100,12 +100,12 @@ const App: React.FC = () => {
       const activeQuestions = questionSet.length ? questionSet : QUESTIONS;
       // Try Gemini Analysis
       const analysis = await analyzePoliticalPosition(answers, activeQuestions, selfPositioning);
-      setResult({ ...analysis, autoavaliacao: selfPositioning });
+      setResult({ ...analysis, autoavaliacao: selfPositioning, timestamp: Date.now() });
       setState(AppState.RESULTS);
     } catch (err) {
       console.error("Gemini failed, using backup calculation", err);
       const backup = generateBackupResult(answers, questionSet.length ? questionSet : QUESTIONS, selfPositioning);
-      setResult({ ...backup, autoavaliacao: selfPositioning });
+      setResult({ ...backup, autoavaliacao: selfPositioning, timestamp: Date.now() });
       setState(AppState.RESULTS);
     } finally {
       setIsLoading(false);

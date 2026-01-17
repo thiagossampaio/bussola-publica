@@ -53,6 +53,9 @@ export interface PoliticalResult {
   confianca_classificacao: number;
   autoavaliacao?: SelfPositioningSelection | null;
   timestamp?: number;
+  prioridades?: Scores | null;
+  uf?: string | null;
+  ufOptIn?: boolean;
 }
 
 export enum AppState {

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { getParticipationCount } from '../services/participationService';
 import RadarVisualization from './RadarChart';
 import { trackEvent } from '../utils/analytics';
@@ -46,24 +46,48 @@ const LandingPage: React.FC<LandingPageProps> = ({
     return `${formatted} pessoas já responderam`;
   }, [participationCount]);
 
-  const sampleScores = {
+  const sampleProfileScores = {
     economico: 6.8,
     social: 3.2,
     cultural: 7.1,
     nacional: 4.6,
   };
 
-  const sampleSelfScores = {
-    economico: 6,
-    social: 5,
-    cultural: 5,
-    nacional: 5,
+  const samplePriorityScores = {
+    economico: 7.2,
+    social: 4.1,
+    cultural: 6.4,
+    nacional: 3.7,
   };
 
-  const sampleDistribution = [
-    { label: 'Discordo', value: 22 },
-    { label: 'Neutro', value: 31 },
-    { label: 'Concordo', value: 47 },
+  const themeComparatorData = [
+    { tema: 'Saúde', perfil: 62, prioridade: 78 },
+    { tema: 'Economia', perfil: 71, prioridade: 64 },
+    { tema: 'Educação', perfil: 58, prioridade: 82 },
+    { tema: 'Segurança', perfil: 66, prioridade: 70 },
+  ];
+
+  const timelineData = [
+    { mes: 'Ago', atual: 5.2, anterior: 4.6 },
+    { mes: 'Set', atual: 5.5, anterior: 4.9 },
+    { mes: 'Out', atual: 5.8, anterior: 5.1 },
+    { mes: 'Nov', atual: 6.1, anterior: 5.4 },
+    { mes: 'Dez', atual: 6.4, anterior: 5.6 },
+  ];
+
+  const ufHeatmap = [
+    { uf: 'AC', color: 'bg-indigo-100' },
+    { uf: 'AM', color: 'bg-indigo-200' },
+    { uf: 'PA', color: 'bg-indigo-300' },
+    { uf: 'CE', color: 'bg-indigo-200' },
+    { uf: 'PE', color: 'bg-indigo-300' },
+    { uf: 'BA', color: 'bg-indigo-400' },
+    { uf: 'DF', color: 'bg-indigo-300' },
+    { uf: 'GO', color: 'bg-indigo-200' },
+    { uf: 'MG', color: 'bg-indigo-500' },
+    { uf: 'RJ', color: 'bg-indigo-500' },
+    { uf: 'SP', color: 'bg-indigo-600' },
+    { uf: 'RS', color: 'bg-indigo-400' },
   ];
 
   const showResume = hasSavedProgress && onResume;
@@ -71,15 +95,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const heroCopy = useMemo(() => {
     if (copyVariant === 'B') {
       return {
-        headline: 'Entenda suas escolhas antes das urnas',
-        subline: 'Responda em minutos, receba 3 insights claros e compartilhe seu perfil politico com quem voce confia.',
-        cta: 'Quero meu perfil agora'
+        headline: 'Compare suas prioridades com o Brasil em campanha',
+        subline: 'Descubra seu perfil politico, contraste com temas eleitorais e veja como suas prioridades se alinham ao debate nacional.',
+        cta: 'Quero meu comparador'
       };
     }
     return {
-      headline: 'Descubra sua bussola politica com IA',
-      subline: 'Questionario multidimensional, analise inteligente e um resumo pronto para compartilhar.',
-      cta: 'Iniciar questionario'
+      headline: 'Sua bussola politica com comparador de temas',
+      subline: 'Prioridades pessoais, radar inteligente e mapa opt-in para entender seu lugar no debate nacional.',
+      cta: 'Iniciar comparador'
     };
   }, [copyVariant]);
 
@@ -115,7 +139,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               style={{ animationDelay: '80ms' }}
             >
               <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
-              IA aplicada à ciência política
+              Fase 2 ativa: temporada de campanha
             </div>
 
             <h1 id="inicio-titulo" className="text-4xl md:text-6xl font-bold text-slate-900 mt-6 tracking-tight animate-fade-in-up" style={{ animationDelay: '140ms' }}>
@@ -200,9 +224,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-slate-500">
               {[
                 { label: 'Sem cadastro', value: 'Acesso imediato' },
-                { label: '100% gratuito', value: 'Sem paywall' },
-                { label: 'Anônimo', value: 'Dados agregados' },
-                { label: 'Resultado claro', value: 'Resumo compartilhável' }
+                { label: 'Mapa opt-in', value: 'Você escolhe' },
+                { label: 'Modo debate', value: 'Neutro e claro' },
+                { label: 'Timeline', value: 'Evolução do perfil' }
               ].map((item) => (
                 <div key={item.label} className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm">
                   <p className="text-slate-700 font-semibold">{item.label}</p>
@@ -258,12 +282,12 @@ const LandingPage: React.FC<LandingPageProps> = ({
       <section id="como-funciona" className="max-w-6xl mx-auto px-6" aria-labelledby="como-funciona-titulo">
         <div className="text-center mb-12">
           <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Como funciona</p>
-          <h2 id="como-funciona-titulo" className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">Uma jornada clara em três etapas</h2>
+          <h2 id="como-funciona-titulo" className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">Uma jornada clara com novos fluxos</h2>
           <p className="text-slate-600 mt-4 max-w-2xl mx-auto">
-            Você responde perguntas situacionais, a IA identifica padrões e sua bússola política é apresentada com explicações claras.
+            Você responde perguntas situacionais, a IA identifica padrões e a fase 2 adiciona comparadores e contexto para o debate.
           </p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-4 gap-6">
           {[
             {
               title: 'Autoavaliação rápida',
@@ -274,8 +298,12 @@ const LandingPage: React.FC<LandingPageProps> = ({
               description: 'Avalia economia, sociedade, cultura e visão nacional com perguntas equilibradas.',
             },
             {
-              title: 'Resumo pronto para compartilhar',
-              description: 'Receba 3 insights claros e um card para enviar ao seu círculo.',
+              title: 'Comparador de temas',
+              description: 'Contraste suas prioridades com saúde, economia, educação e segurança.',
+            },
+            {
+              title: 'Modo debate + timeline',
+              description: 'Explicações neutras e evolução do perfil para quem refaz o teste.',
             },
           ].map((item) => (
             <div key={item.title} className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 hover-lift">
@@ -311,17 +339,19 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
       <section id="novidades" className="max-w-6xl mx-auto px-6" aria-labelledby="novidades-titulo">
         <div className="text-center mb-12">
-          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Novidades da fase 1</p>
-          <h2 id="novidades-titulo" className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">Mais clareza, mais compartilhamento</h2>
+          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Fase 2 em destaque</p>
+          <h2 id="novidades-titulo" className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">Novos fluxos para uma campanha mais consciente</h2>
           <p className="text-slate-600 mt-4 max-w-2xl mx-auto">
-            Melhorias pensadas para elevar engajamento e conversão sem perder neutralidade.
+            Compare prioridades, visualize tendências regionais e transforme diferenças em conversa saudável.
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            { title: 'Resumo compartilhável', desc: 'Três insights objetivos para copiar e enviar rapidamente.' },
-            { title: 'Ranking com recorte temporal', desc: 'Acompanhe tendências em 7 e 30 dias além do total.' },
-            { title: 'Badges de perfil', desc: 'Consistência e raridade destacadas em seu resultado.' },
+            { title: 'Comparador de temas', desc: 'Veja como suas prioridades se alinham às agendas em pauta.' },
+            { title: 'Radar de prioridades', desc: 'Contraste o que você valoriza com seu perfil político real.' },
+            { title: 'Mapa do Brasil (opt-in)', desc: 'Distribuição agregada por UF com controle total do usuário.' },
+            { title: 'Modo debate saudável', desc: 'Explicações neutras para divergências sem polarizar.' },
+            { title: 'Timeline de mudança', desc: 'Acompanhe a evolução do seu perfil ao refazer o teste.' },
           ].map((item) => (
             <div key={item.title} className="bg-gradient-to-br from-white to-indigo-50 border border-indigo-100 rounded-3xl p-6 hover-lift transition-all hover:-translate-y-1">
               <h3 className="text-lg font-bold text-slate-900 mb-3">{item.title}</h3>
@@ -408,36 +438,36 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
       <section id="graficos" className="max-w-6xl mx-auto px-6" aria-labelledby="graficos-titulo">
         <div className="text-center mb-12">
-          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Exemplo de respostas</p>
-          <h2 id="graficos-titulo" className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">Visualize padrões reais</h2>
+          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Novos insights</p>
+          <h2 id="graficos-titulo" className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">Prioridades, temas e contexto regional</h2>
           <p className="text-slate-600 mt-4 max-w-2xl mx-auto">
-            Veja como uma resposta randômica pode ser interpretada e como o perfil geral se distribui nos eixos principais.
+            Combine seu perfil com comparadores e visualize tendências agregadas de forma clara e neutra.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8">
+        <div className="grid lg:grid-cols-3 gap-8">
           <div className="bg-white border border-slate-100 rounded-3xl shadow-lg p-6 hover-lift">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <p className="text-sm font-semibold text-indigo-600">Perfil amostral</p>
-                <h3 className="text-xl font-bold text-slate-900">Radar multidimensional</h3>
+                <p className="text-sm font-semibold text-indigo-600">Radar de prioridades</p>
+                <h3 className="text-xl font-bold text-slate-900">Perfil vs prioridades</h3>
               </div>
               <span className="text-xs font-semibold text-slate-400">Dados simulados</span>
             </div>
             <RadarVisualization
-              scores={sampleScores}
-              comparisonScores={sampleSelfScores}
-              comparisonLabel="Autoavaliação"
-              ariaLabel="Radar com perfil amostral por eixo político"
+              scores={sampleProfileScores}
+              comparisonScores={samplePriorityScores}
+              comparisonLabel="Prioridades"
+              ariaLabel="Radar com perfil e prioridades pessoais"
             />
             <div className="flex items-center justify-center gap-4 text-xs text-slate-400 mt-3">
               <span className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-indigo-600" aria-hidden="true"></span>
-                IA
+                Perfil
               </span>
               <span className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden="true"></span>
-                Autoavaliação
+                Prioridades
               </span>
             </div>
           </div>
@@ -445,25 +475,99 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="bg-white border border-slate-100 rounded-3xl shadow-lg p-6 hover-lift">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm font-semibold text-indigo-600">Resposta randômica</p>
-                <h3 className="text-xl font-bold text-slate-900">Papel do Estado na economia</h3>
+                <p className="text-sm font-semibold text-indigo-600">Comparador de temas</p>
+                <h3 className="text-xl font-bold text-slate-900">Prioridades x perfil</h3>
               </div>
-              <span className="text-xs font-semibold text-slate-400">Distribuição</span>
+              <span className="text-xs font-semibold text-slate-400">Temas eleitorais</span>
             </div>
-            <div className="h-64" role="img" aria-label="Gráfico de barras com distribuição de respostas">
+            <div className="h-64" role="img" aria-label="Gráfico de barras com comparador de temas">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={sampleDistribution}>
+                <BarChart data={themeComparatorData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="tema" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }} />
-                  <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 0, 0]} />
+                  <Legend verticalAlign="top" height={24} wrapperStyle={{ fontSize: 12, color: '#64748b' }} />
+                  <Bar dataKey="perfil" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="prioridade" fill="#fbbf24" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
             <p className="text-xs text-slate-400 mt-4">
-              A distribuição acima é um exemplo ilustrativo baseado em respostas agregadas.
+              Exemplo ilustrativo para comparar sua leitura pessoal com os temas do momento.
             </p>
+          </div>
+
+          <div className="bg-white border border-slate-100 rounded-3xl shadow-lg p-6 hover-lift">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-semibold text-indigo-600">Mapa do Brasil</p>
+                <h3 className="text-xl font-bold text-slate-900">Distribuição por UF</h3>
+              </div>
+              <span className="text-xs font-semibold text-slate-400">Opt-in</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2" role="img" aria-label="Mapa ilustrativo por unidade federativa">
+              {ufHeatmap.map((item) => (
+                <div key={item.uf} className={`rounded-xl px-2 py-3 text-xs font-semibold text-slate-700 text-center ${item.color}`}>
+                  {item.uf}
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between text-xs text-slate-400 mt-4">
+              <span>Baixa</span>
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-8 rounded-full bg-indigo-200" aria-hidden="true"></span>
+                <span className="h-2 w-8 rounded-full bg-indigo-400" aria-hidden="true"></span>
+                <span className="h-2 w-8 rounded-full bg-indigo-600" aria-hidden="true"></span>
+              </span>
+              <span>Alta</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="timeline" className="max-w-6xl mx-auto px-6" aria-labelledby="timeline-titulo">
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
+          <div>
+            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Timeline de mudança</p>
+            <h2 id="timeline-titulo" className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">Evolucao do perfil ao refazer o teste</h2>
+            <p className="text-slate-600 mt-4">
+              Quem volta ao questionario visualiza como suas prioridades evoluem ao longo da campanha, com comparacoes neutras.
+            </p>
+            <div className="mt-6 space-y-3 text-sm text-slate-600">
+              {[
+                'Linha atual mostra seu perfil mais recente.',
+                'Linha anterior destaca sua ultima resposta completa.',
+                'Explicacoes ajudam a contextualizar cada variacao.',
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-indigo-600" aria-hidden="true"></span>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white border border-slate-100 rounded-3xl shadow-lg p-6 hover-lift">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm font-semibold text-indigo-600">Timeline</p>
+                <h3 className="text-xl font-bold text-slate-900">Mudanca no eixo economico</h3>
+              </div>
+              <span className="text-xs font-semibold text-slate-400">Exemplo</span>
+            </div>
+            <div className="h-56" role="img" aria-label="Gráfico de linha mostrando evolução do perfil">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={timelineData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="mes" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis domain={[0, 10]} tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }} />
+                  <Legend verticalAlign="top" height={24} wrapperStyle={{ fontSize: 12, color: '#64748b' }} />
+                  <Line type="monotone" dataKey="atual" stroke="#6366f1" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="anterior" stroke="#fbbf24" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       </section>
@@ -507,9 +611,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <div className="bg-slate-900 text-white rounded-3xl px-8 py-12 flex flex-col lg:flex-row items-center justify-between gap-8 animate-fade-in-up">
           <div>
             <p className="text-sm font-semibold text-indigo-200 uppercase tracking-wide">Pronto para começar?</p>
-            <h2 id="cta-titulo" className="text-3xl font-bold mt-2">Descubra sua bússola política agora</h2>
+            <h2 id="cta-titulo" className="text-3xl font-bold mt-2">Compare suas prioridades agora</h2>
             <p className="text-slate-300 mt-3 max-w-xl">
-              Faça o teste, entenda suas prioridades e compare seu perfil com milhares de participantes.
+              Faça o teste, veja o comparador de temas e acompanhe sua evolucao durante a campanha.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
