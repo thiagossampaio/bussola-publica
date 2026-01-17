@@ -145,8 +145,10 @@ async function analyzeResponses(userResponses) {
 
 **Fase 3 (Polimento)**
 - Questões abertas opcionais
-- Acessibilidade completa e otimização de performance
-- Animações e micro-interações
+- [x] Acessibilidade completa e otimização de performance
+- [x] SEO
+- [x] PWA
+- [x] Animações e micro-interações
 
 ## Contribuição
 
