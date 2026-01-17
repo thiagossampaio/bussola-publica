@@ -124,9 +124,56 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="text-center py-12 text-slate-400 text-sm border-t border-slate-100">
-        <p>© 2025 Bússola Política AI — Tecnologia Gemini 3 Pro & Flash</p>
-        <p className="mt-1">Ciência Política baseada nos modelos Political Compass & 8values.</p>
+      <footer className="border-t border-slate-100 bg-white">
+        <div className="max-w-6xl mx-auto px-6 py-12 grid gap-10 md:grid-cols-[1.2fr_0.9fr_0.9fr]">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="bg-indigo-600 p-2 rounded-lg shadow-md shadow-indigo-200">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <span className="font-extrabold text-lg tracking-tight text-slate-800">Bússola Política AI</span>
+            </div>
+            <p className="text-slate-500 text-sm leading-relaxed max-w-sm">
+              Uma experiência de auto-conhecimento político que combina ciência política e IA para entregar um retrato multidimensional claro e explicável.
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={startQuiz}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm"
+              >
+                Iniciar Questionário
+              </button>
+              <button
+                onClick={viewRanking}
+                className="text-slate-500 hover:text-slate-700 text-sm font-semibold"
+              >
+                Ver Ranking
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <p className="font-semibold text-slate-800">Navegação</p>
+            <a className="block text-slate-500 hover:text-slate-700" href="#inicio">Início</a>
+            <a className="block text-slate-500 hover:text-slate-700" href="#como-funciona">Como funciona</a>
+            <a className="block text-slate-500 hover:text-slate-700" href="#metodologia">Metodologia</a>
+            <a className="block text-slate-500 hover:text-slate-700" href="#graficos">Gráficos</a>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <p className="font-semibold text-slate-800">Sobre</p>
+            <p className="text-slate-500">Tecnologia Gemini 3 Pro & Flash</p>
+            <p className="text-slate-500">Modelos Political Compass & 8values</p>
+            <p className="text-slate-400">Dados tratados de forma anônima</p>
+          </div>
+        </div>
+        <div className="border-t border-slate-100 py-6">
+          <p className="text-center text-slate-400 text-xs">
+            © 2025 Bússola Política AI — Ciência Política explicável para todas as pessoas.
+          </p>
+        </div>
       </footer>
     </div>
   );

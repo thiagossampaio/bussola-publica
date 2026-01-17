@@ -137,12 +137,10 @@ async function analyzeResponses(userResponses) {
 
 **Fase 1 (MVP)**
 - Landing page básica e 30 questões essenciais
-- Integração básica com Gemini
 - Página de resultados com gráfico radar
 
 **Fase 2 (Aprimoramento)**
 - Questionário completo (45 questões, 4 eixos)
-- Sistema de explicações com Gemini
 - Ranking global com visualizações
 
 **Fase 3 (Polimento)**
