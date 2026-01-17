@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { AppState, UserAnswer, PoliticalResult } from './types';
-import { QUESTIONS } from './constants';
+import { AppState, UserAnswer, PoliticalResult, Question } from './types';
+import { QUESTIONS, buildQuestionnaireQuestions } from './constants';
 import LandingPage from './components/LandingPage';
 import Questionnaire from './components/Questionnaire';
 import Results from './components/Results';
@@ -13,25 +13,28 @@ const App: React.FC = () => {
   const [state, setState] = useState<AppState>(AppState.LANDING);
   const [result, setResult] = useState<PoliticalResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [questionSet, setQuestionSet] = useState<Question[]>([]);
 
   const startQuiz = () => {
     setState(AppState.CONSENT);
   };
 
   const handleConsent = () => {
+    setQuestionSet(buildQuestionnaireQuestions());
     setState(AppState.QUESTIONNAIRE);
   };
 
   const handleComplete = async (answers: UserAnswer[]) => {
     setIsLoading(true);
     try {
+      const activeQuestions = questionSet.length ? questionSet : QUESTIONS;
       // Try Gemini Analysis
-      const analysis = await analyzePoliticalPosition(answers, QUESTIONS);
+      const analysis = await analyzePoliticalPosition(answers, activeQuestions);
       setResult(analysis);
       setState(AppState.RESULTS);
     } catch (err) {
       console.error("Gemini failed, using backup calculation", err);
-      const backup = generateBackupResult(answers, QUESTIONS);
+      const backup = generateBackupResult(answers, questionSet.length ? questionSet : QUESTIONS);
       setResult(backup);
       setState(AppState.RESULTS);
     } finally {
@@ -105,7 +108,11 @@ const App: React.FC = () => {
         )}
 
         {state === AppState.QUESTIONNAIRE && (
-          <Questionnaire onComplete={handleComplete} onCancel={goHome} />
+          <Questionnaire
+            questions={questionSet}
+            onComplete={handleComplete}
+            onCancel={goHome}
+          />
         )}
 
         {state === AppState.RESULTS && result && (

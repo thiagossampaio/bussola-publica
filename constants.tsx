@@ -1,5 +1,5 @@
 
-import { Question } from './types';
+import { Question, Category } from './types';
 
 export const QUESTIONS: Question[] = [
   // Economia (0: Esquerda, 10: Direita)
@@ -39,6 +39,41 @@ export const QUESTIONS: Question[] = [
     effect: { economia: -1 },
     weight: 0.9
   },
+  {
+    id: 21,
+    category: 'economia',
+    text: "O Estado deve controlar preços de itens essenciais em períodos de crise.",
+    effect: { economia: -1 },
+    weight: 1.0
+  },
+  {
+    id: 22,
+    category: 'economia',
+    text: "Reduzir impostos e regulações deve ser prioridade para estimular o empreendedorismo.",
+    effect: { economia: 1 },
+    weight: 1.1
+  },
+  {
+    id: 23,
+    category: 'economia',
+    text: "Empresas públicas devem existir em setores estratégicos, mesmo com menor lucro.",
+    effect: { economia: -1 },
+    weight: 1.0
+  },
+  {
+    id: 24,
+    category: 'economia',
+    text: "O salário mínimo deveria ser definido pelo mercado, não pelo governo.",
+    effect: { economia: 1 },
+    weight: 1.0
+  },
+  {
+    id: 25,
+    category: 'economia',
+    text: "Uma renda básica universal deve ser garantida a todos os cidadãos.",
+    effect: { economia: -1 },
+    weight: 1.1
+  },
 
   // Social/Autoridade (0: Autoritário, 10: Libertário)
   // Concordar (+1) move para Libertário, Discordar (-1) move para Autoritário
@@ -76,6 +111,41 @@ export const QUESTIONS: Question[] = [
     text: "A posse de armas por cidadãos comuns deve ser um direito garantido pelo Estado.",
     effect: { social: 1 },
     weight: 1.0
+  },
+  {
+    id: 26,
+    category: 'social',
+    text: "Protestos e greves devem poder ocorrer sem autorização prévia do governo.",
+    effect: { social: 1 },
+    weight: 1.0
+  },
+  {
+    id: 27,
+    category: 'social',
+    text: "O uso de reconhecimento facial em espaços públicos é necessário para combater o crime.",
+    effect: { social: -1 },
+    weight: 1.1
+  },
+  {
+    id: 28,
+    category: 'social',
+    text: "Liberdade de expressão deve incluir críticas severas ao governo e às autoridades.",
+    effect: { social: 1 },
+    weight: 1.0
+  },
+  {
+    id: 29,
+    category: 'social',
+    text: "Penas mais duras, inclusive prisão perpétua, são necessárias para certos crimes.",
+    effect: { social: -1 },
+    weight: 1.1
+  },
+  {
+    id: 30,
+    category: 'social',
+    text: "O Estado deve restringir conteúdos na internet para proteger crianças e adolescentes.",
+    effect: { social: -1 },
+    weight: 0.9
   },
 
   // Cultural (0: Conservador, 10: Progressista)
@@ -115,6 +185,41 @@ export const QUESTIONS: Question[] = [
     effect: { cultural: 1 },
     weight: 0.9
   },
+  {
+    id: 31,
+    category: 'cultural',
+    text: "O casamento entre pessoas do mesmo sexo deve ter os mesmos direitos civis.",
+    effect: { cultural: 1 },
+    weight: 1.0
+  },
+  {
+    id: 32,
+    category: 'cultural',
+    text: "Tradições culturais devem ser preservadas mesmo que limitem costumes modernos.",
+    effect: { cultural: -1 },
+    weight: 1.0
+  },
+  {
+    id: 33,
+    category: 'cultural',
+    text: "Políticas públicas devem incentivar o uso de linguagem inclusiva.",
+    effect: { cultural: 1 },
+    weight: 0.9
+  },
+  {
+    id: 34,
+    category: 'cultural',
+    text: "Arte financiada pelo Estado deve respeitar valores morais tradicionais.",
+    effect: { cultural: -1 },
+    weight: 1.1
+  },
+  {
+    id: 35,
+    category: 'cultural',
+    text: "Direitos de pessoas trans devem ser reconhecidos em documentos oficiais.",
+    effect: { cultural: 1 },
+    weight: 1.0
+  },
 
   // Nacional (0: Nacionalista, 10: Globalista)
   // Concordar (+1) move para Globalista, Discordar (-1) move para Nacionalista
@@ -152,8 +257,92 @@ export const QUESTIONS: Question[] = [
     text: "Questões ambientais globais devem se sobrepor aos interesses de desenvolvimento econômico nacional.",
     effect: { nacional: 1 },
     weight: 1.1
+  },
+  {
+    id: 36,
+    category: 'nacional',
+    text: "Investimentos estrangeiros em setores estratégicos devem ser facilitados.",
+    effect: { nacional: 1 },
+    weight: 1.0
+  },
+  {
+    id: 37,
+    category: 'nacional',
+    text: "Produtos nacionais devem ter preferência em compras públicas.",
+    effect: { nacional: -1 },
+    weight: 1.0
+  },
+  {
+    id: 38,
+    category: 'nacional',
+    text: "O país deve aceitar decisões de tribunais internacionais de direitos humanos.",
+    effect: { nacional: 1 },
+    weight: 1.1
+  },
+  {
+    id: 39,
+    category: 'nacional',
+    text: "Controle rigoroso de fronteiras é essencial, mesmo que reduza a imigração.",
+    effect: { nacional: -1 },
+    weight: 1.0
+  },
+  {
+    id: 40,
+    category: 'nacional',
+    text: "Cooperação internacional em ciência deve ser prioridade estratégica.",
+    effect: { nacional: 1 },
+    weight: 0.9
   }
 ];
+
+export const MAX_QUESTIONS = 20;
+
+const shuffle = <T,>(items: T[]): T[] => {
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+};
+
+export const buildQuestionnaireQuestions = (
+  questions: Question[] = QUESTIONS,
+  maxTotal = MAX_QUESTIONS
+): Question[] => {
+  if (maxTotal <= 0) {
+    return [];
+  }
+
+  const byCategory = questions.reduce((acc, question) => {
+    const category = question.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(question);
+    return acc;
+  }, {} as Record<Category, Question[]>);
+
+  const categories = Object.keys(byCategory) as Category[];
+  if (!categories.length) {
+    return [];
+  }
+
+  const maxPerCategory = Math.floor(maxTotal / categories.length);
+  if (maxPerCategory <= 0) {
+    return [];
+  }
+
+  const perCategory = Math.min(
+    maxPerCategory,
+    ...categories.map(category => byCategory[category].length)
+  );
+
+  const selected = categories.flatMap(category =>
+    shuffle([...byCategory[category]]).slice(0, perCategory)
+  );
+
+  return shuffle(selected);
+};
 
 export const LIKERT_OPTIONS = [
   { value: 1, label: "Discordo Totalmente", color: "bg-red-500" },

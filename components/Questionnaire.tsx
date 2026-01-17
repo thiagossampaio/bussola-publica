@@ -1,23 +1,30 @@
 
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { QUESTIONS, LIKERT_OPTIONS } from '../constants';
+import { LIKERT_OPTIONS } from '../constants';
 import { UserAnswer, Question } from '../types';
 import { getQuestionExplanation } from '../services/geminiService';
 
 interface QuestionnaireProps {
+  questions: Question[];
   onComplete: (answers: UserAnswer[]) => void;
   onCancel: () => void;
 }
 
-const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete, onCancel }) => {
+const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, onCancel }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<UserAnswer[]>([]);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [loadingExpl, setLoadingExpl] = useState(false);
 
-  const currentQuestion = QUESTIONS[currentIndex];
-  const progress = ((currentIndex + 1) / QUESTIONS.length) * 100;
+  const currentQuestion = questions[currentIndex];
+  const progress = questions.length
+    ? ((currentIndex + 1) / questions.length) * 100
+    : 0;
+
+  if (!questions.length) {
+    return null;
+  }
 
   const handleAnswer = (value: number) => {
     const newAnswers = [...answers];
@@ -32,7 +39,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete, onCancel }) =
     setAnswers(newAnswers);
     setExplanation(null);
 
-    if (currentIndex < QUESTIONS.length - 1) {
+    if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
       onComplete(newAnswers);
@@ -67,7 +74,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete, onCancel }) =
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-            Pergunta {currentIndex + 1} de {QUESTIONS.length}
+            Pergunta {currentIndex + 1} de {questions.length}
           </span>
           <span className="text-sm font-bold text-indigo-600">{Math.round(progress)}%</span>
         </div>
