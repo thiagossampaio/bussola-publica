@@ -45,8 +45,14 @@ const App: React.FC = () => {
   const viewRanking = () => setState(AppState.RANKING);
   const goHome = () => setState(AppState.LANDING);
 
+  const isLanding = state === AppState.LANDING;
+
   return (
-    <div className="min-h-screen selection:bg-indigo-100 selection:text-indigo-900 transition-colors duration-500">
+    <div
+      className={`min-h-screen selection:bg-indigo-100 selection:text-indigo-900 transition-colors duration-500 ${
+        isLanding ? "bg-gradient-to-b from-indigo-50 via-white to-white" : "bg-white"
+      }`}
+    >
       {/* Navigation / Brand Header */}
       <nav className="p-6 max-w-7xl mx-auto flex justify-between items-center">
         <div 

@@ -50,7 +50,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
   return (
     <div className="flex flex-col gap-24 pb-24">
       <section id="inicio" className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-indigo-50 via-white to-white"></div>
         <div className="absolute -top-24 right-0 h-72 w-72 bg-indigo-200/60 blur-[120px] rounded-full"></div>
         <div className="absolute -bottom-24 left-0 h-72 w-72 bg-sky-200/60 blur-[120px] rounded-full"></div>
 
