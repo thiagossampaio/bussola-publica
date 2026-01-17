@@ -1,5 +1,5 @@
 
-import { Question, Category, SelfPositioningOption } from './types';
+import { Question, Category, SelfPositioningOption, ConceptEntry } from './types';
 
 export const QUESTIONS: Question[] = [
   // Economia (0: Esquerda, 10: Direita)
@@ -419,4 +419,91 @@ export const UF_OPTIONS = [
   { value: 'SP', label: 'São Paulo' },
   { value: 'SE', label: 'Sergipe' },
   { value: 'TO', label: 'Tocantins' },
+];
+
+export const CONCEPT_LIBRARY: ConceptEntry[] = [
+  {
+    id: 'estado-bem-estar',
+    title: 'Estado de bem-estar social',
+    description: 'Debate sobre o papel do Estado em garantir saúde, educação e proteção social.',
+    category: 'economia',
+    questionIds: [1, 5, 21, 25]
+  },
+  {
+    id: 'tributacao-progressiva',
+    title: 'Tributação progressiva',
+    description: 'Discussão sobre impostos sobre renda e patrimônio para reduzir desigualdades.',
+    category: 'economia',
+    questionIds: [2]
+  },
+  {
+    id: 'livre-mercado',
+    title: 'Livre mercado e privatizações',
+    description: 'Ideias sobre autorregulação econômica, privatização e estímulo ao empreendedorismo.',
+    category: 'economia',
+    questionIds: [3, 4, 22, 24]
+  },
+  {
+    id: 'liberdades-civis',
+    title: 'Liberdades civis',
+    description: 'Liberdade de expressão, protestos e proteção contra abuso estatal.',
+    category: 'social',
+    questionIds: [6, 26, 28]
+  },
+  {
+    id: 'seguranca-vigilancia',
+    title: 'Segurança pública e vigilância',
+    description: 'Uso de monitoramento e endurecimento penal para garantir ordem.',
+    category: 'social',
+    questionIds: [7, 9, 27, 29, 30]
+  },
+  {
+    id: 'diversidade-direitos',
+    title: 'Diversidade e direitos civis',
+    description: 'Reconhecimento de minorias, ações afirmativas e políticas inclusivas.',
+    category: 'cultural',
+    questionIds: [13, 15, 31, 33, 35]
+  },
+  {
+    id: 'tradicao-moral',
+    title: 'Tradição e moralidade pública',
+    description: 'Prioridade a valores tradicionais, religião e preservação cultural.',
+    category: 'cultural',
+    questionIds: [12, 14, 32, 34]
+  },
+  {
+    id: 'direitos-reprodutivos',
+    title: 'Direitos reprodutivos',
+    description: 'Políticas sobre aborto e autonomia corporal.',
+    category: 'cultural',
+    questionIds: [11]
+  },
+  {
+    id: 'soberania-globalizacao',
+    title: 'Soberania e globalização',
+    description: 'Equilíbrio entre cooperação internacional e autonomia nacional.',
+    category: 'nacional',
+    questionIds: [16, 17, 38]
+  },
+  {
+    id: 'imigracao-fronteiras',
+    title: 'Imigração e fronteiras',
+    description: 'Abertura ou restrição de fluxos migratórios e controle territorial.',
+    category: 'nacional',
+    questionIds: [18, 39]
+  },
+  {
+    id: 'nacionalismo-economico',
+    title: 'Nacionalismo econômico',
+    description: 'Proteção de setores estratégicos e preferência por produtos locais.',
+    category: 'nacional',
+    questionIds: [19, 37, 36]
+  },
+  {
+    id: 'cooperacao-cientifica',
+    title: 'Cooperação científica e ambiental',
+    description: 'Coordenação internacional em ciência e meio ambiente.',
+    category: 'nacional',
+    questionIds: [20, 40]
+  }
 ];

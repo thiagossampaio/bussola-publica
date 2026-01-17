@@ -1,5 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Scores } from '../types';
 import { ParticipationDoc, subscribeToParticipations } from '../services/participationService';
 import { trackEvent } from '../utils/analytics';
@@ -17,6 +18,7 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
+  const [monthlyTrendOpen, setMonthlyTrendOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToParticipations(
@@ -98,6 +100,133 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
       maxCount,
     };
   }, [filteredRanking]);
+
+  const monthlyTrendData = useMemo(() => {
+    if (!rankingData.length) return [];
+
+    const buckets = new Map<
+      string,
+      {
+        count: number;
+        sums: Scores;
+      }
+    >();
+
+    rankingData.forEach((item) => {
+      if (!Number.isFinite(item.createdAtMs)) return;
+      const date = new Date(item.createdAtMs);
+      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      const bucket = buckets.get(key) || {
+        count: 0,
+        sums: { economico: 0, social: 0, cultural: 0, nacional: 0 }
+      };
+      bucket.count += 1;
+      bucket.sums.economico += item.scores.economico;
+      bucket.sums.social += item.scores.social;
+      bucket.sums.cultural += item.scores.cultural;
+      bucket.sums.nacional += item.scores.nacional;
+      buckets.set(key, bucket);
+    });
+
+    const now = new Date();
+    const months = Array.from({ length: 6 }).map((_, idx) => {
+      const monthDate = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1);
+      const key = `${monthDate.getFullYear()}-${monthDate.getMonth()}`;
+      const label = monthDate.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      const bucket = buckets.get(key);
+      if (!bucket || bucket.count === 0) {
+        return {
+          label,
+          economico: null,
+          social: null,
+          cultural: null,
+          nacional: null,
+          count: 0,
+        };
+      }
+      return {
+        label,
+        economico: Number((bucket.sums.economico / bucket.count).toFixed(2)),
+        social: Number((bucket.sums.social / bucket.count).toFixed(2)),
+        cultural: Number((bucket.sums.cultural / bucket.count).toFixed(2)),
+        nacional: Number((bucket.sums.nacional / bucket.count).toFixed(2)),
+        count: bucket.count,
+      };
+    });
+
+    return months;
+  }, [rankingData]);
+
+  const hasMonthlyTrend = useMemo(() => monthlyTrendData.some((item) => item.count > 0), [monthlyTrendData]);
+
+  const handleToggleMonthlyTrend = () => {
+    const next = !monthlyTrendOpen;
+    setMonthlyTrendOpen(next);
+    if (next) {
+      trackEvent('historical_trend_viewed');
+    }
+  };
+
+  const exportPayload = useMemo(() => {
+    return {
+      generatedAt: new Date().toISOString(),
+      range: timeRange,
+      rangeLabel,
+      participants: filteredRanking.length,
+      averages: stats?.avgScores ?? null,
+      distributions: stats?.distributions ?? null,
+      uf: {
+        total: ufStats.total,
+        maxCount: ufStats.maxCount,
+        byUf: ufStats.heatmap.map((item) => ({
+          uf: item.uf,
+          label: item.label,
+          count: item.count,
+        })),
+      },
+      monthlyTrends: monthlyTrendData,
+    };
+  }, [filteredRanking.length, monthlyTrendData, rangeLabel, stats, timeRange, ufStats]);
+
+  const downloadFile = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const buildMonthlyCsv = () => {
+    const header = 'mes,economico,social,cultural,nacional,participacoes';
+    const rows = monthlyTrendData.map((item) => [
+      item.label,
+      item.economico ?? '',
+      item.social ?? '',
+      item.cultural ?? '',
+      item.nacional ?? '',
+      item.count,
+    ]);
+    return [header, ...rows.map((row) => row.join(','))].join('\n');
+  };
+
+  const handleExport = (format: 'json' | 'csv') => {
+    trackEvent('researcher_export_requested', { format, range: timeRange });
+    if (format === 'json') {
+      downloadFile(
+        JSON.stringify(exportPayload, null, 2),
+        `bussola-politica-agregado-${timeRange}.json`,
+        'application/json'
+      );
+      return;
+    }
+    downloadFile(
+      buildMonthlyCsv(),
+      `bussola-politica-tendencias-mensais-${timeRange}.csv`,
+      'text/csv;charset=utf-8;'
+    );
+  };
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
@@ -211,6 +340,52 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
         </div>
       )}
 
+      {!isLoading && !errorMessage && rankingData.length > 0 && (
+        <section id="historico-mensal" className="mt-10 bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Histórico mensal</p>
+              <h3 className="text-xl font-bold text-slate-800">Evolução dos eixos no ranking</h3>
+            </div>
+            <button
+              onClick={handleToggleMonthlyTrend}
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+              type="button"
+            >
+              {monthlyTrendOpen ? 'Ocultar histórico' : 'Ver histórico'}
+            </button>
+          </div>
+          {monthlyTrendOpen && (
+            <div className="mt-6">
+              {hasMonthlyTrend ? (
+                <div className="h-72" role="img" aria-label="Gráfico de linha com médias mensais por eixo">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={monthlyTrendData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <YAxis domain={[0, 10]} tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }} />
+                      <Legend />
+                      <Line type="monotone" dataKey="economico" name="Econômico" stroke="#6366f1" strokeWidth={2} dot />
+                      <Line type="monotone" dataKey="social" name="Social" stroke="#10b981" strokeWidth={2} dot />
+                      <Line type="monotone" dataKey="cultural" name="Cultural" stroke="#f59e0b" strokeWidth={2} dot />
+                      <Line type="monotone" dataKey="nacional" name="Nacional" stroke="#ef4444" strokeWidth={2} dot />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm text-slate-500">
+                  Ainda não há dados mensais suficientes para montar o histórico.
+                </div>
+              )}
+              <p className="text-xs text-slate-400 mt-4">
+                Médias mensais calculadas com participações agregadas e anônimas.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+
       {!isLoading && !errorMessage && filteredRanking.length > 0 && (
         <div className="mt-10 bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -252,6 +427,40 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
             </>
           )}
         </div>
+      )}
+
+      {!isLoading && !errorMessage && rankingData.length > 0 && (
+        <section id="exportacao-pesquisa" className="mt-10 bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Exportação agregada</p>
+              <h3 className="text-xl font-bold text-slate-800">Dados para pesquisadores</h3>
+            </div>
+            <span className="text-xs text-slate-400">Sem informações pessoais</span>
+          </div>
+          <p className="text-sm text-slate-600">
+            Baixe o resumo agregado do ranking, incluindo médias por eixo, distribuição e tendências mensais.
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => handleExport('json')}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-3 rounded-xl shadow-sm transition-all"
+              type="button"
+            >
+              Baixar JSON agregado
+            </button>
+            <button
+              onClick={() => handleExport('csv')}
+              className="flex-1 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-5 py-3 rounded-xl shadow-sm transition-all"
+              type="button"
+            >
+              Baixar CSV mensal
+            </button>
+          </div>
+          <p className="text-xs text-slate-400 mt-4">
+            O JSON respeita o filtro atual de período. O CSV foca nas tendências mensais agregadas.
+          </p>
+        </section>
       )}
     </div>
   );

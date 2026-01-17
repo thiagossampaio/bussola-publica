@@ -23,6 +23,14 @@ export interface Scores {
   nacional: number;
 }
 
+export interface ConceptEntry {
+  id: string;
+  title: string;
+  description: string;
+  category: Category;
+  questionIds: number[];
+}
+
 export type SelfPositioningId =
   | 'esquerda'
   | 'centro_esquerda'

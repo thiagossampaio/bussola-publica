@@ -52,6 +52,14 @@ O **Compass Político** foi projetado para oferecer uma experiência clara, educ
 - Mapa do Brasil opt-in com distribuição agregada por UF
 - Modo debate saudável com explicações neutras de divergências
 - Timeline de mudança para quem refaz o questionário
+- Digest semanal de tendências agregadas
+- Comparação de clusters com linguagem neutra
+- Convite em grupo para comparar médias
+- Cards verticais para stories (Instagram/WhatsApp)
+- Explicação do score e etiqueta de confiança
+- Histórico mensal dos eixos no ranking
+- Biblioteca de conceitos políticos vinculados às perguntas
+- Exportações agregadas para pesquisadores (JSON/CSV)
 
 ## Arquitetura e Stack
 
@@ -281,14 +289,14 @@ No GA4:
 - Modo debate saudável com explicações neutras de divergências
 - Timeline de mudança para quem refaz o teste
 
-**Fase 3 — Pico Eleitoral (12–20 semanas)**
+**Fase 3 — Pico Eleitoral (12–20 semanas) — Implementada**
 - Digest semanal de tendências agregadas
 - Comparação de clusters com linguagem neutra
 - Convite em grupo para comparação de médias
 - Cards especiais para stories (Instagram/WhatsApp)
 - Explicação do score e etiqueta de confiança
 
-**Fase 4 — Pós‑Eleições (20+ semanas)**
+**Fase 4 — Pós‑Eleições (20+ semanas) — Implementada**
 - Análises históricas mensais do ranking
 - Biblioteca de conceitos políticos vinculados às perguntas
 - Painel de exportações agregadas para pesquisadores

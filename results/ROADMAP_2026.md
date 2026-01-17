@@ -31,14 +31,14 @@ Este roadmap foca em aumento de valor para o usuario, viralidade organica e educ
 - Graficos focados em comparacao (perfil x prioridades) e evolucao temporal
 - Sinalizacao clara de opt-in e dados agregados
 
-## Fase 3 — Pico Eleitoral (12–20 semanas)
+## Fase 3 — Pico Eleitoral (12–20 semanas) — Implementada
 - Digest semanal de tendencias agregadas
 - Comparacao de clusters com linguagem neutra
 - Convite em grupo para comparar medias
 - Cards para stories (Instagram/WhatsApp)
 - Explicacao do score e etiqueta de confianca
 
-## Fase 4 — Pos-Eleicoes (20+ semanas)
+## Fase 4 — Pos-Eleicoes (20+ semanas) — Implementada
 - Historico mensal de eixos no ranking
 - Biblioteca de conceitos politicos vinculados as perguntas
 - Exportacoes agregadas para pesquisadores

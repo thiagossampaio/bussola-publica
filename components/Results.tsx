@@ -1,13 +1,13 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { PoliticalResult, Scores } from '../types';
+import { Category, PoliticalResult, Scores } from '../types';
 import RadarVisualization from './RadarChart';
 import { saveParticipation } from '../services/participationService';
 import { getFigureComparison } from '../services/geminiService';
 import { trackEvent } from '../utils/analytics';
 import { buildShareCardSvg, buildStoryCardSvg } from '../utils/shareCard';
-import { UF_OPTIONS } from '../constants';
+import { CONCEPT_LIBRARY, QUESTIONS, UF_OPTIONS } from '../constants';
 
 interface ResultsProps {
   result: PoliticalResult;
@@ -42,6 +42,10 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [digestOpen, setDigestOpen] = useState(false);
   const [confidenceOpen, setConfidenceOpen] = useState(false);
+  const [conceptsOpen, setConceptsOpen] = useState(false);
+  const [conceptQuery, setConceptQuery] = useState('');
+  const [conceptCategory, setConceptCategory] = useState<Category | 'todas'>('todas');
+  const [expandedConceptId, setExpandedConceptId] = useState<string | null>(null);
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
   const [groupName, setGroupName] = useState('');
   const [groupSize, setGroupSize] = useState(5);
@@ -107,6 +111,44 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     cultural: 'Cultural',
     nacional: 'Nacional'
   };
+
+  const categoryLabels: Record<Category, string> = {
+    economia: 'Econômico',
+    social: 'Social',
+    cultural: 'Cultural',
+    nacional: 'Nacional',
+  };
+
+  const questionLookup = useMemo(() => {
+    const map = new Map<number, string>();
+    QUESTIONS.forEach((question) => {
+      map.set(question.id, question.text);
+    });
+    return map;
+  }, []);
+
+  const conceptItems = useMemo(() => {
+    return CONCEPT_LIBRARY.map((entry) => ({
+      ...entry,
+      questions: entry.questionIds
+        .map((id) => questionLookup.get(id))
+        .filter((text): text is string => Boolean(text)),
+    }));
+  }, [questionLookup]);
+
+  const filteredConcepts = useMemo(() => {
+    const query = conceptQuery.trim().toLowerCase();
+    return conceptItems.filter((item) => {
+      if (conceptCategory !== 'todas' && item.category !== conceptCategory) return false;
+      if (!query) return true;
+      const matchQuestion = item.questions.some((text) => text.toLowerCase().includes(query));
+      return (
+        item.title.toLowerCase().includes(query) ||
+        item.description.toLowerCase().includes(query) ||
+        matchQuestion
+      );
+    });
+  }, [conceptCategory, conceptItems, conceptQuery]);
 
   const axisInsights = useMemo(() => {
     const axisMap: Array<{
@@ -528,6 +570,14 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     setConfidenceOpen(next);
     if (next) {
       trackEvent('score_confidence_viewed');
+    }
+  };
+
+  const handleToggleConcepts = () => {
+    const next = !conceptsOpen;
+    setConceptsOpen(next);
+    if (next) {
+      trackEvent('concept_library_opened');
     }
   };
 
@@ -1245,6 +1295,91 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
           {showFullAnalysis ? "Ver menos" : "Ler análise completa"}
         </button>
       </div>
+
+      <section id="biblioteca-conceitos" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Biblioteca de conceitos</p>
+            <h3 className="text-2xl font-bold text-slate-800">Entenda os termos por trás das perguntas</h3>
+          </div>
+          <button
+            onClick={handleToggleConcepts}
+            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+            type="button"
+          >
+            {conceptsOpen ? 'Ocultar biblioteca' : 'Abrir biblioteca'}
+          </button>
+        </div>
+        {conceptsOpen && (
+          <div className="mt-6">
+            <div className="grid md:grid-cols-[1fr_auto] gap-3">
+              <input
+                type="text"
+                value={conceptQuery}
+                onChange={(event) => setConceptQuery(event.target.value)}
+                placeholder="Buscar conceito ou palavra-chave"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700"
+                aria-label="Buscar conceito"
+              />
+              <select
+                value={conceptCategory}
+                onChange={(event) => setConceptCategory(event.target.value as Category | 'todas')}
+                className="w-full md:w-52 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700"
+                aria-label="Filtrar por categoria"
+              >
+                <option value="todas">Todas as categorias</option>
+                <option value="economia">Econômico</option>
+                <option value="social">Social</option>
+                <option value="cultural">Cultural</option>
+                <option value="nacional">Nacional</option>
+              </select>
+            </div>
+            <div className="mt-6 grid gap-4">
+              {filteredConcepts.length === 0 ? (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm text-slate-500">
+                  Nenhum conceito encontrado para esse filtro.
+                </div>
+              ) : (
+                filteredConcepts.map((concept) => (
+                  <div key={concept.id} className="border border-slate-200 rounded-2xl p-5 bg-white">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
+                          {categoryLabels[concept.category]}
+                        </p>
+                        <h4 className="text-lg font-bold text-slate-800 mt-1">{concept.title}</h4>
+                        <p className="text-sm text-slate-600 mt-2">{concept.description}</p>
+                      </div>
+                      <div className="text-right text-xs text-slate-400">
+                        <span className="font-semibold text-slate-600">{concept.questions.length}</span> perguntas
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setExpandedConceptId((prev) => (prev === concept.id ? null : concept.id))
+                      }
+                      className="mt-4 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                      type="button"
+                    >
+                      {expandedConceptId === concept.id ? 'Ocultar perguntas' : 'Ver perguntas relacionadas'}
+                    </button>
+                    {expandedConceptId === concept.id && (
+                      <ul className="mt-4 space-y-2 text-sm text-slate-600 list-disc pl-5">
+                        {concept.questions.map((text, idx) => (
+                          <li key={`${concept.id}-${idx}`}>{text}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+            <p className="text-xs text-slate-400 mt-4">
+              Os conceitos resumem debates neutros e se conectam diretamente às perguntas do questionário.
+            </p>
+          </div>
+        )}
+      </section>
 
       <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
         <h3 className="text-xl font-bold text-slate-800 mb-6">Figuras Alinhadas</h3>
