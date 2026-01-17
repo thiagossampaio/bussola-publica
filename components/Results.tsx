@@ -13,6 +13,11 @@ interface ResultsProps {
 const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) => {
   const [showFullAnalysis, setShowFullAnalysis] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    variant: 'success' | 'error';
+  } | null>(null);
 
   const getScoreColor = (val: number) => {
     if (val < 4) return "bg-red-500";
@@ -25,18 +30,77 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     setIsSaving(true);
     try {
       await saveParticipation(result);
-      alert("Resultados salvos anonimamente no ranking global!");
-      onViewRanking();
+      setModal({
+        title: "Participação registrada!",
+        message: "Resultados salvos anonimamente no ranking global.",
+        variant: 'success'
+      });
     } catch (error) {
       console.error("Falha ao salvar participação no Firestore", error);
-      alert("Não foi possível salvar sua participação agora. Tente novamente em instantes.");
+      setModal({
+        title: "Não foi possível salvar",
+        message: "Tente novamente em instantes.",
+        variant: 'error'
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
+  const closeModal = () => setModal(null);
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 animate-in fade-in duration-1000">
+      {modal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeModal} />
+          <div className="relative w-full max-w-md rounded-3xl bg-white shadow-2xl border border-slate-100 p-8">
+            <div className="flex items-start gap-3">
+              <div className={`h-10 w-10 rounded-2xl flex items-center justify-center ${modal.variant === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                {modal.variant === 'success' ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.5 7.5a1 1 0 01-1.414 0l-3.5-3.5a1 1 0 011.414-1.414L8.5 12.086l6.793-6.793a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-5a1 1 0 112 0 1 1 0 01-2 0zm0-7a1 1 0 112 0v4a1 1 0 11-2 0V6z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-slate-900">{modal.title}</h3>
+                <p className="text-slate-600 mt-1">{modal.message}</p>
+              </div>
+            </div>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              {modal.variant === 'success' ? (
+                <button
+                  onClick={() => {
+                    closeModal();
+                    onViewRanking();
+                  }}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
+                >
+                  Ver ranking
+                </button>
+              ) : (
+                <button
+                  onClick={closeModal}
+                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
+                >
+                  Entendi
+                </button>
+              )}
+              <button
+                onClick={closeModal}
+                className="flex-1 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3 rounded-2xl shadow-sm transition-all"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="text-center mb-12">
         <h1 className="text-sm font-bold text-indigo-600 uppercase tracking-widest mb-2">Seu Perfil Político</h1>
         <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">{result.classificacao_principal}</h2>
