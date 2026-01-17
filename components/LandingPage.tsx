@@ -95,15 +95,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const heroCopy = useMemo(() => {
     if (copyVariant === 'B') {
       return {
-        headline: 'Compare suas prioridades com o Brasil em campanha',
-        subline: 'Descubra seu perfil politico, contraste com temas eleitorais e veja como suas prioridades se alinham ao debate nacional.',
-        cta: 'Quero meu comparador'
+        headline: 'Descubra seu posicionamento político',
+        subline: 'Análise rigorosa com Inteligência Artificial apresenta seu perfil político e posicionamento com clareza e embasamento. Descubra de forma objetiva onde você se encontra no cenário nacional.',
+        cta: 'Iniciar análise'
       };
     }
     return {
-      headline: 'Sua bussola politica com comparador de temas',
-      subline: 'Prioridades pessoais, radar inteligente e mapa opt-in para entender seu lugar no debate nacional.',
-      cta: 'Iniciar comparador'
+      headline: 'Entenda seu perfil político de forma fundamentada',
+      subline: 'Radar inteligente, análise científica e IA revelam suas prioridades e mostram sua posição no mapa político do Brasil.',
+      cta: 'Explorar meu perfil'
     };
   }, [copyVariant]);
 
@@ -584,19 +584,39 @@ const LandingPage: React.FC<LandingPageProps> = ({
           {[
             {
               title: 'Preciso criar conta?',
-              description: 'Não. O teste é instantâneo e não solicita dados pessoais.'
+              description: 'Não. O teste é imediato e não solicita dados pessoais.'
             },
             {
-              title: 'Quanto tempo leva?',
-              description: 'Em média 4 minutos. Mostramos o progresso e você pode retomar depois.'
+              title: 'Quanto tempo leva para concluir?',
+              description: 'Em média 8–12 minutos. Você vê o progresso, pode pausar e retomar depois.'
             },
             {
-              title: 'Meus dados são públicos?',
-              description: 'Somente o resultado agregado aparece no ranking, sem identificação.'
+              title: 'O teste é gratuito?',
+              description: 'Sim. Você pode responder e ver seu resultado completo sem custo.'
+            },
+            {
+              title: 'Como funciona a metodologia?',
+              description: 'As respostas são avaliadas em 4 eixos (economia, sociedade, autoridade e visão nacional) com escala Likert.'
+            },
+            {
+              title: 'A IA faz o resultado?',
+              description: 'Usamos o Google Gemini para interpretar padrões e gerar uma explicação personalizada, além dos scores.'
+            },
+            {
+              title: 'Meus dados ficam públicos?',
+              description: 'Não. Apenas resultados agregados aparecem no ranking, sempre sem identificação.'
+            },
+            {
+              title: 'Posso pular perguntas?',
+              description: 'Sim. É possível pular algumas questões e voltar depois para ajustar suas respostas.'
             },
             {
               title: 'Posso comparar com minha autoavaliação?',
-              description: 'Sim. O resultado final mostra a diferença entre sua percepção e a análise da IA.'
+              description: 'Sim. O relatório final mostra sua autoavaliação e o diagnóstico da IA lado a lado.'
+            },
+            {
+              title: 'Posso compartilhar o resultado?',
+              description: 'Sim. Você pode gerar um card para redes sociais com seu perfil e insights.'
             }
           ].map((item) => (
             <div key={item.title} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition">

@@ -11,6 +11,46 @@ import { analyzePoliticalPosition } from './services/geminiService';
 import { generateBackupResult } from './utils/calculations';
 
 const PROGRESS_STORAGE_KEY = 'bp_questionnaire_progress_v1';
+const RESULT_STORAGE_KEY = 'bp_result_entries_v1';
+
+type StoredResult = PoliticalResult & { id: string };
+
+const getStoredResults = (): Record<string, StoredResult> => {
+  if (typeof window === 'undefined') return {};
+  const raw = localStorage.getItem(RESULT_STORAGE_KEY);
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as Record<string, StoredResult>;
+    return parsed ?? {};
+  } catch (error) {
+    console.warn('Falha ao ler resultados salvos', error);
+    return {};
+  }
+};
+
+const saveStoredResult = (entry: StoredResult) => {
+  if (typeof window === 'undefined') return;
+  const stored = getStoredResults();
+  stored[entry.id] = entry;
+  localStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify(stored));
+};
+
+const loadStoredResult = (id: string) => {
+  const stored = getStoredResults();
+  return stored[id] ?? null;
+};
+
+const generateResultId = () => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+};
+
+const getResultIdFromPath = (pathname: string) => {
+  const match = pathname.match(/^\/resultado\/([a-zA-Z0-9_-]+)$/);
+  return match ? decodeURIComponent(match[1]) : null;
+};
 
 type SavedProgress = {
   version: 1;
@@ -48,6 +88,7 @@ const App: React.FC = () => {
   const [savedProgress, setSavedProgress] = useState<SavedProgress | null>(null);
   const [resumeAnswers, setResumeAnswers] = useState<UserAnswer[] | null>(null);
   const [resumeIndex, setResumeIndex] = useState<number | null>(null);
+  const [missingResultId, setMissingResultId] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = parseSavedProgress(localStorage.getItem(PROGRESS_STORAGE_KEY));
@@ -55,6 +96,34 @@ const App: React.FC = () => {
       setSavedProgress(saved);
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const syncFromLocation = () => {
+      const id = getResultIdFromPath(window.location.pathname);
+      if (id) {
+        const stored = loadStoredResult(id);
+        if (stored) {
+          setResult(stored);
+          setMissingResultId(null);
+          setState(AppState.RESULTS);
+        } else {
+          setResult(null);
+          setMissingResultId(id);
+          setState(AppState.RESULTS);
+        }
+        return;
+      }
+      if (state === AppState.RESULTS) {
+        setResult(null);
+        setMissingResultId(null);
+        setState(AppState.LANDING);
+      }
+    };
+    syncFromLocation();
+    window.addEventListener('popstate', syncFromLocation);
+    return () => window.removeEventListener('popstate', syncFromLocation);
+  }, [state]);
 
   const clearProgress = () => {
     localStorage.removeItem(PROGRESS_STORAGE_KEY);
@@ -68,6 +137,10 @@ const App: React.FC = () => {
     setSelfPositioning(null);
     setQuestionSet([]);
     setResult(null);
+    setMissingResultId(null);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/');
+    }
     setState(AppState.CONSENT);
   };
 
@@ -100,12 +173,24 @@ const App: React.FC = () => {
       const activeQuestions = questionSet.length ? questionSet : QUESTIONS;
       // Try Gemini Analysis
       const analysis = await analyzePoliticalPosition(answers, activeQuestions, selfPositioning);
-      setResult({ ...analysis, autoavaliacao: selfPositioning, timestamp: Date.now() });
+      const baseResult = { ...analysis, autoavaliacao: selfPositioning, timestamp: Date.now() };
+      const entry: StoredResult = { ...baseResult, id: baseResult.id ?? generateResultId() };
+      saveStoredResult(entry);
+      if (typeof window !== 'undefined') {
+        window.history.pushState({}, '', `/resultado/${encodeURIComponent(entry.id)}`);
+      }
+      setResult(entry);
       setState(AppState.RESULTS);
     } catch (err) {
       console.error("Gemini failed, using backup calculation", err);
       const backup = generateBackupResult(answers, questionSet.length ? questionSet : QUESTIONS, selfPositioning);
-      setResult({ ...backup, autoavaliacao: selfPositioning, timestamp: Date.now() });
+      const baseResult = { ...backup, autoavaliacao: selfPositioning, timestamp: Date.now() };
+      const entry: StoredResult = { ...baseResult, id: baseResult.id ?? generateResultId() };
+      saveStoredResult(entry);
+      if (typeof window !== 'undefined') {
+        window.history.pushState({}, '', `/resultado/${encodeURIComponent(entry.id)}`);
+      }
+      setResult(entry);
       setState(AppState.RESULTS);
     } finally {
       setIsLoading(false);
@@ -130,8 +215,12 @@ const App: React.FC = () => {
   const goHome = () => {
     setState(AppState.LANDING);
     setResult(null);
+    setMissingResultId(null);
     setQuestionSet([]);
     setSelfPositioning(null);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/');
+    }
   };
 
   const resumeLabel = useMemo(() => {
@@ -263,6 +352,22 @@ const App: React.FC = () => {
 
         {state === AppState.RESULTS && result && (
           <Results result={result} onRestart={goHome} onViewRanking={viewRanking} />
+        )}
+
+        {state === AppState.RESULTS && !result && missingResultId && (
+          <div className="max-w-xl mx-auto py-12 px-6 bg-white rounded-3xl shadow-xl border border-slate-100 animate-in slide-in-from-bottom-8 duration-500">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Resultado não encontrado</h2>
+            <p className="text-slate-600 mb-6">
+              Não conseguimos localizar este resultado. Ele pode ter sido apagado ou o link está incompleto.
+            </p>
+            <button
+              onClick={goHome}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all"
+              type="button"
+            >
+              Voltar ao início
+            </button>
+          </div>
         )}
 
         {state === AppState.RANKING && (

@@ -190,6 +190,14 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     return buildShareCardSvg(result, originLabel);
   }, [result]);
 
+  const resultLink = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    if (result.id) {
+      return `${window.location.origin}/resultado/${encodeURIComponent(result.id)}`;
+    }
+    return window.location.href;
+  }, [result.id]);
+
   const cardDataUrl = useMemo(() => {
     return `data:image/svg+xml;utf8,${encodeURIComponent(cardSvg)}`;
   }, [cardSvg]);
@@ -408,10 +416,10 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
         await navigator.share({
           title: 'Bússola Política AI',
           text: shareText,
-          url: window.location.href
+          url: resultLink
         });
       } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(`${shareText} ${window.location.origin}`);
+        await navigator.clipboard.writeText(`${shareText} ${resultLink}`);
       } else {
         throw new Error('Compartilhamento indisponível');
       }
@@ -917,12 +925,18 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
           <button
             onClick={async () => {
               trackEvent('share_card_copy_link', { source: 'results' });
-              if (navigator.clipboard?.writeText) {
-                await navigator.clipboard.writeText(window.location.href);
+              if (navigator.clipboard?.writeText && resultLink) {
+                await navigator.clipboard.writeText(resultLink);
                 setModal({
                   title: "Link copiado",
                   message: "Envie o link junto com seu card para mais conversoes.",
                   variant: 'success'
+                });
+              } else {
+                setModal({
+                  title: "Não foi possível copiar",
+                  message: "Seu navegador não permite copiar automaticamente.",
+                  variant: 'error'
                 });
               }
             }}

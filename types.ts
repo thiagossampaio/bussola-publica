@@ -45,6 +45,7 @@ export interface SelfPositioningSelection {
 }
 
 export interface PoliticalResult {
+  id?: string;
   classificacao_principal: string;
   scores: Scores;
   intensidade_geral: number;
