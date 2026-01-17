@@ -69,6 +69,20 @@ const App: React.FC = () => {
           </div>
           <span className="font-extrabold text-xl tracking-tight text-slate-800">Bússola Política</span>
         </button>
+        <a
+          href="https://github.com/thiagossampaio/bussola-publica"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors"
+          aria-label="Ver o código no GitHub"
+        >
+          <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 2a10 10 0 0 0-3.162 19.49c.5.093.687-.217.687-.48 0-.237-.009-.866-.013-1.7-2.797.608-3.386-1.348-3.386-1.348-.457-1.16-1.116-1.47-1.116-1.47-.913-.624.069-.611.069-.611 1.01.071 1.542 1.037 1.542 1.037.897 1.538 2.355 1.093 2.93.836.092-.65.351-1.094.638-1.345-2.233-.254-4.584-1.116-4.584-4.966 0-1.096.392-1.993 1.037-2.695-.104-.255-.45-1.279.099-2.665 0 0 .844-.27 2.767 1.03A9.64 9.64 0 0 1 12 6.844a9.64 9.64 0 0 1 2.522.34c1.923-1.3 2.766-1.03 2.766-1.03.55 1.386.204 2.41.1 2.665.646.702 1.036 1.6 1.036 2.695 0 3.86-2.353 4.708-4.59 4.957.36.31.681.92.681 1.854 0 1.337-.012 2.415-.012 2.743 0 .266.186.577.693.48A10 10 0 0 0 12 2Z"
+            />
+          </svg>
+        </a>
       </nav>
 
       <main id="conteudo" className="container mx-auto pb-20" role="main">
@@ -169,6 +183,21 @@ const App: React.FC = () => {
                 Ver Ranking
               </button>
             </div>
+          <a
+            href="https://github.com/thiagossampaio/bussola-publica"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+            aria-label="Ver o código no GitHub"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12 2a10 10 0 0 0-3.162 19.49c.5.093.687-.217.687-.48 0-.237-.009-.866-.013-1.7-2.797.608-3.386-1.348-3.386-1.348-.457-1.16-1.116-1.47-1.116-1.47-.913-.624.069-.611.069-.611 1.01.071 1.542 1.037 1.542 1.037.897 1.538 2.355 1.093 2.93.836.092-.65.351-1.094.638-1.345-2.233-.254-4.584-1.116-4.584-4.966 0-1.096.392-1.993 1.037-2.695-.104-.255-.45-1.279.099-2.665 0 0 .844-.27 2.767 1.03A9.64 9.64 0 0 1 12 6.844a9.64 9.64 0 0 1 2.522.34c1.923-1.3 2.766-1.03 2.766-1.03.55 1.386.204 2.41.1 2.665.646.702 1.036 1.6 1.036 2.695 0 3.86-2.353 4.708-4.59 4.957.36.31.681.92.681 1.854 0 1.337-.012 2.415-.012 2.743 0 .266.186.577.693.48A10 10 0 0 0 12 2Z"
+              />
+            </svg>
+            <span>GitHub</span>
+          </a>
           </div>
 
           <div className="space-y-3 text-sm">
