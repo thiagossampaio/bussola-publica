@@ -50,10 +50,10 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-12">
-        <button onClick={onBack} className="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2">
+        <button onClick={onBack} className="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2" type="button">
           ← Voltar ao Início
         </button>
-        <button onClick={onTakeQuiz} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold shadow-md hover:bg-indigo-700 transition-all">
+        <button onClick={onTakeQuiz} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold shadow-md hover:bg-indigo-700 transition-all" type="button">
           Participar agora
         </button>
       </div>
@@ -62,20 +62,20 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
       <p className="text-slate-500 mb-12">Dados coletados de forma anônima entre todos os participantes.</p>
 
       {isLoading ? (
-        <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+        <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200" role="status" aria-live="polite" aria-busy="true">
           <p className="text-slate-400 text-lg">Carregando dados do ranking...</p>
         </div>
       ) : errorMessage ? (
         <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
           <p className="text-slate-400 text-lg mb-4">{errorMessage}</p>
-          <button onClick={onTakeQuiz} className="text-indigo-600 font-bold underline decoration-2">
+          <button onClick={onTakeQuiz} className="text-indigo-600 font-bold underline decoration-2" type="button">
             Participar mesmo assim
           </button>
         </div>
       ) : rankingData.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
           <p className="text-slate-400 text-lg mb-4">Ainda não temos dados suficientes no ranking.</p>
-          <button onClick={onTakeQuiz} className="text-indigo-600 font-bold underline decoration-2">
+          <button onClick={onTakeQuiz} className="text-indigo-600 font-bold underline decoration-2" type="button">
             Seja o primeiro a participar!
           </button>
         </div>
@@ -94,7 +94,11 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
                       <span className="font-bold text-slate-700">{name}</span>
                       <span className="text-slate-500">{percentage.toFixed(1)}% ({count})</span>
                     </div>
-                    <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
+                    <div
+                      className="h-2 w-full bg-slate-50 rounded-full overflow-hidden"
+                      role="img"
+                      aria-label={`${name}: ${percentage.toFixed(1)}% (${count})`}
+                    >
                       <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${percentage}%` }} />
                     </div>
                   </div>
@@ -114,7 +118,11 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
                     <span className="font-bold capitalize">{key}</span>
                     <span className="font-bold">{val.toFixed(1)}/10</span>
                   </div>
-                  <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                  <div
+                    className="h-3 w-full bg-slate-800 rounded-full overflow-hidden border border-slate-700"
+                    role="img"
+                    aria-label={`${key}: ${val.toFixed(1)} de 10`}
+                  >
                     <div className="h-full bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.5)]" style={{ width: `${val * 10}%` }} />
                   </div>
                 </div>

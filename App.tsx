@@ -53,11 +53,14 @@ const App: React.FC = () => {
         isLanding ? "bg-gradient-to-b from-indigo-50 via-white to-white" : "bg-white"
       }`}
     >
+      <a href="#conteudo" className="skip-link">Pular para o conteúdo principal</a>
       {/* Navigation / Brand Header */}
-      <nav className="p-6 max-w-7xl mx-auto flex justify-between items-center">
-        <div 
-          onClick={goHome} 
+      <nav className="p-6 max-w-7xl mx-auto flex justify-between items-center" aria-label="Navegação principal">
+        <button
+          type="button"
+          onClick={goHome}
           className="flex items-center gap-2 cursor-pointer group"
+          aria-label="Voltar para o início"
         >
           <div className="bg-indigo-600 p-2 rounded-lg group-hover:rotate-12 transition-transform shadow-md shadow-indigo-200">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -65,16 +68,21 @@ const App: React.FC = () => {
             </svg>
           </div>
           <span className="font-extrabold text-xl tracking-tight text-slate-800">Bússola Política</span>
-        </div>
+        </button>
       </nav>
 
-      <main className="container mx-auto pb-20">
+      <main id="conteudo" className="container mx-auto pb-20" role="main">
         {isLoading && (
-          <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 text-center">
+          <div
+            className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6 text-center"
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+          >
             <div className="relative mb-8">
-              <div className="w-20 h-20 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+              <div className="w-20 h-20 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" aria-hidden="true"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
@@ -104,10 +112,11 @@ const App: React.FC = () => {
             <button 
               onClick={handleConsent}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all"
+              type="button"
             >
               Eu concordo e quero começar
             </button>
-            <button onClick={goHome} className="w-full mt-4 text-slate-400 font-medium hover:text-slate-600 transition-colors">
+            <button onClick={goHome} className="w-full mt-4 text-slate-400 font-medium hover:text-slate-600 transition-colors" type="button">
               Voltar
             </button>
           </div>
@@ -148,12 +157,14 @@ const App: React.FC = () => {
               <button
                 onClick={startQuiz}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm"
+                type="button"
               >
                 Iniciar Questionário
               </button>
               <button
                 onClick={viewRanking}
                 className="text-slate-500 hover:text-slate-700 text-sm font-semibold"
+                type="button"
               >
                 Ver Ranking
               </button>

@@ -70,6 +70,22 @@
   transform: scale(0.98);
 }
 
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  z-index: 999;
+  padding: 0.75rem 1rem;
+  background: #111827;
+  color: #ffffff;
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-fade-in-up,

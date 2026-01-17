@@ -136,8 +136,8 @@ async function analyzeResponses(userResponses) {
 ## Roadmap
 
 **Fase 1 (MVP)**
-- Landing page básica e 30 questões essenciais
-- Página de resultados com gráfico radar
+- [x] Landing page básica e 30 questões essenciais
+- [x] Página de resultados com gráfico radar
 
 **Fase 2 (Aprimoramento)**
 - Questionário completo (45 questões, 4 eixos)

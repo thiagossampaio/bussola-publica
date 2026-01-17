@@ -78,23 +78,29 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     <div className="max-w-4xl mx-auto py-8 px-4 animate-in fade-in duration-1000">
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeModal} />
-          <div className="relative w-full max-w-md rounded-3xl bg-white shadow-2xl border border-slate-100 p-8">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeModal} aria-hidden="true" />
+          <div
+            className="relative w-full max-w-md rounded-3xl bg-white shadow-2xl border border-slate-100 p-8"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-feedback-titulo"
+            aria-describedby="modal-feedback-mensagem"
+          >
             <div className="flex items-start gap-3">
               <div className={`h-10 w-10 rounded-2xl flex items-center justify-center ${modal.variant === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
                 {modal.variant === 'success' ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.5 7.5a1 1 0 01-1.414 0l-3.5-3.5a1 1 0 011.414-1.414L8.5 12.086l6.793-6.793a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-5a1 1 0 112 0 1 1 0 01-2 0zm0-7a1 1 0 112 0v4a1 1 0 11-2 0V6z" clipRule="evenodd" />
                   </svg>
                 )}
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-slate-900">{modal.title}</h3>
-                <p className="text-slate-600 mt-1">{modal.message}</p>
+                <h3 id="modal-feedback-titulo" className="text-xl font-bold text-slate-900">{modal.title}</h3>
+                <p id="modal-feedback-mensagem" className="text-slate-600 mt-1">{modal.message}</p>
               </div>
             </div>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -105,6 +111,7 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
                     onViewRanking();
                   }}
                   className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
+                  type="button"
                 >
                   Ver ranking
                 </button>
@@ -112,6 +119,7 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
                 <button
                   onClick={closeModal}
                   className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
+                  type="button"
                 >
                   Entendi
                 </button>
@@ -119,6 +127,7 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
               <button
                 onClick={closeModal}
                 className="flex-1 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3 rounded-2xl shadow-sm transition-all"
+                type="button"
               >
                 Fechar
               </button>
@@ -128,17 +137,23 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
       )}
       {analysisTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeAnalysisModal} />
-          <div className="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-slate-100 p-8">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeAnalysisModal} aria-hidden="true" />
+          <div
+            className="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-slate-100 p-8"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-analise-titulo"
+            aria-describedby="modal-analise-descricao"
+          >
             <div className="flex items-start gap-3">
               <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-fuchsia-500 text-white flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12 2l1.9 4.2L18 8.1l-4.1 1.1L12 14l-1.9-4.8L6 8.1l4.1-1.9L12 2z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-slate-900">Gemini: comparação com {analysisTarget}</h3>
-                <p className="text-slate-600 mt-1">
+                <h3 id="modal-analise-titulo" className="text-xl font-bold text-slate-900">Gemini: comparação com {analysisTarget}</h3>
+                <p id="modal-analise-descricao" className="text-slate-600 mt-1">
                   {analysisLoading ? "Analisando..." : "Explicação gerada com base no seu resultado."}
                 </p>
               </div>
@@ -146,7 +161,7 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
             <div className="mt-6">
               {analysisLoading ? (
                 <div className="flex items-center gap-3 text-indigo-600">
-                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -162,6 +177,7 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
               <button
                 onClick={closeAnalysisModal}
                 className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
+                type="button"
               >
                 Fechar
               </button>
@@ -183,13 +199,13 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
         {/* Chart Card */}
         <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
           <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
             </svg>
             Gráfico de Posicionamento
           </h3>
-          <RadarVisualization scores={result.scores} />
+          <RadarVisualization scores={result.scores} ariaLabel="Radar do seu perfil político por eixo" />
           <p className="text-xs text-slate-400 text-center mt-4 italic">
             0: Esquerda/Autoritário/Conservador/Nacionalista <br/>
             10: Direita/Libertário/Progressista/Globalista
@@ -199,7 +215,7 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
         {/* Scores Card */}
         <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
           <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             Pontuações por Eixo
@@ -227,7 +243,7 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
 
       <div className="bg-indigo-900 text-white p-8 rounded-3xl shadow-2xl mb-12">
         <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
           </svg>
           Análise do Especialista AI
@@ -238,6 +254,8 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
         <button 
           onClick={() => setShowFullAnalysis(!showFullAnalysis)}
           className="mt-4 text-indigo-400 font-bold hover:text-white transition-colors underline decoration-2 underline-offset-4"
+          type="button"
+          aria-expanded={showFullAnalysis}
         >
           {showFullAnalysis ? "Ver menos" : "Ler análise completa"}
         </button>
@@ -255,14 +273,15 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
                 className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-fuchsia-500 text-white flex items-center justify-center shadow-sm hover:shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                 aria-label={`Comparar com Gemini: ${fig}`}
                 title="Comparar com Gemini"
+                type="button"
               >
                 {analysisLoading && analysisTarget === fig ? (
-                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12 2l1.9 4.2L18 8.1l-4.1 1.1L12 14l-1.9-4.8L6 8.1l4.1-1.9L12 2z" />
                   </svg>
                 )}
@@ -277,12 +296,15 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
           onClick={saveToRanking}
           disabled={isSaving}
           className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl shadow-lg transition-all"
+          type="button"
+          aria-busy={isSaving}
         >
           {isSaving ? "Salvando..." : "Salvar no Ranking Público"}
         </button>
         <button 
           onClick={onRestart}
           className="flex-1 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-4 rounded-2xl shadow-sm transition-all"
+          type="button"
         >
           Refazer Questionário
         </button>

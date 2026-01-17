@@ -5,9 +5,10 @@ import { Scores } from '../types';
 
 interface RadarVisualizationProps {
   scores: Scores;
+  ariaLabel?: string;
 }
 
-const RadarVisualization: React.FC<RadarVisualizationProps> = ({ scores }) => {
+const RadarVisualization: React.FC<RadarVisualizationProps> = ({ scores, ariaLabel }) => {
   const data = [
     { subject: 'Econômico', A: scores.economico, fullMark: 10 },
     { subject: 'Social', A: scores.social, fullMark: 10 },
@@ -16,7 +17,7 @@ const RadarVisualization: React.FC<RadarVisualizationProps> = ({ scores }) => {
   ];
 
   return (
-    <div className="w-full h-80">
+    <div className="w-full h-80" role="img" aria-label={ariaLabel ?? "Radar de pontuações políticas"}>
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
           <PolarGrid />
