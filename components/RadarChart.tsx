@@ -5,15 +5,22 @@ import { Scores } from '../types';
 
 interface RadarVisualizationProps {
   scores: Scores;
+  comparisonScores?: Scores | null;
+  comparisonLabel?: string;
   ariaLabel?: string;
 }
 
-const RadarVisualization: React.FC<RadarVisualizationProps> = ({ scores, ariaLabel }) => {
+const RadarVisualization: React.FC<RadarVisualizationProps> = ({
+  scores,
+  comparisonScores,
+  comparisonLabel,
+  ariaLabel
+}) => {
   const data = [
-    { subject: 'Econômico', A: scores.economico, fullMark: 10 },
-    { subject: 'Social', A: scores.social, fullMark: 10 },
-    { subject: 'Cultural', A: scores.cultural, fullMark: 10 },
-    { subject: 'Nacional', A: scores.nacional, fullMark: 10 },
+    { subject: 'Econômico', A: scores.economico, B: comparisonScores?.economico, fullMark: 10 },
+    { subject: 'Social', A: scores.social, B: comparisonScores?.social, fullMark: 10 },
+    { subject: 'Cultural', A: scores.cultural, B: comparisonScores?.cultural, fullMark: 10 },
+    { subject: 'Nacional', A: scores.nacional, B: comparisonScores?.nacional, fullMark: 10 },
   ];
 
   return (
@@ -30,6 +37,16 @@ const RadarVisualization: React.FC<RadarVisualizationProps> = ({ scores, ariaLab
             fill="#4f46e5"
             fillOpacity={0.6}
           />
+          {comparisonScores && (
+            <Radar
+              name={comparisonLabel ?? "Autoavaliação"}
+              dataKey="B"
+              stroke="#f59e0b"
+              fill="#f59e0b"
+              fillOpacity={0.2}
+              strokeDasharray="4 4"
+            />
+          )}
         </RadarChart>
       </ResponsiveContainer>
     </div>

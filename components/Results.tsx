@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PoliticalResult, Scores } from '../types';
 import RadarVisualization from './RadarChart';
 import { saveParticipation } from '../services/participationService';
@@ -17,17 +17,28 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
   const [analysisTarget, setAnalysisTarget] = useState<string | null>(null);
   const [analysisText, setAnalysisText] = useState<string | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+  const autoavaliacao = result.autoavaliacao ?? null;
+  const autoScores = autoavaliacao?.scores ?? null;
   const [modal, setModal] = useState<{
     title: string;
     message: string;
     variant: 'success' | 'error';
   } | null>(null);
 
-  const getScoreColor = (val: number) => {
-    if (val < 4) return "bg-red-500";
-    if (val > 6) return "bg-emerald-500";
-    return "bg-slate-500";
+  const axisLabels: Record<keyof Scores, string> = {
+    economico: 'Econômico',
+    social: 'Social',
+    cultural: 'Cultural',
+    nacional: 'Nacional'
   };
+
+  const comparisonNote = useMemo(() => {
+    if (!autoavaliacao) {
+      return "Você optou por não informar sua autoavaliação política.";
+    }
+    const label = autoavaliacao.label;
+    return `Você se declarou "${label}". A IA analisou suas respostas e apontou "${result.classificacao_principal}".`;
+  }, [autoavaliacao, result.classificacao_principal]);
 
   const saveToRanking = async () => {
     if (isSaving) return;
@@ -205,8 +216,25 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
             </svg>
             Gráfico de Posicionamento
           </h3>
-          <RadarVisualization scores={result.scores} ariaLabel="Radar do seu perfil político por eixo" />
-          <p className="text-xs text-slate-400 text-center mt-4 italic">
+          <RadarVisualization
+            scores={result.scores}
+            comparisonScores={autoScores}
+            comparisonLabel="Autoavaliação"
+            ariaLabel="Radar do seu perfil político por eixo"
+          />
+          <div className="flex items-center justify-center gap-4 text-xs text-slate-400 mt-4">
+            <span className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-indigo-600" aria-hidden="true"></span>
+              IA
+            </span>
+            {autoScores && (
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden="true"></span>
+                Autoavaliação
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-slate-400 text-center mt-3 italic">
             0: Esquerda/Autoritário/Conservador/Nacionalista <br/>
             10: Direita/Libertário/Progressista/Globalista
           </p>
@@ -222,23 +250,47 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
           </h3>
           
           <div className="space-y-6">
-            {/* Cast Object.entries to ensure val is treated as number to fix toFixed and arithmetic errors */}
-            {(Object.entries(result.scores) as [string, number][]).map(([key, val]) => (
+            {(Object.entries(result.scores) as [keyof Scores, number][]).map(([key, val]) => (
               <div key={key}>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-bold text-slate-700 capitalize">{key}</span>
-                  <span className="text-sm font-bold text-slate-900">{val.toFixed(1)}/10</span>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-bold text-slate-700">{axisLabels[key]}</span>
+                  <div className="flex items-center gap-3 text-xs font-semibold">
+                    <span className="text-indigo-700">IA {val.toFixed(1)}/10</span>
+                    {autoScores && (
+                      <span className="text-amber-700">Auto {autoScores[key].toFixed(1)}/10</span>
+                    )}
+                  </div>
                 </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full ${getScoreColor(val)} transition-all duration-1000`}
-                    style={{ width: `${val * 10}%` }}
-                  />
+                <div className="space-y-2">
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-indigo-500 transition-all duration-1000"
+                      style={{ width: `${val * 10}%` }}
+                    />
+                  </div>
+                  {autoScores && (
+                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-amber-400 transition-all duration-1000"
+                        style={{ width: `${autoScores[key] * 10}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <h3 className="text-lg font-bold text-slate-800 mb-2">Autoavaliação vs IA</h3>
+        <p className="text-slate-600">{comparisonNote}</p>
+        {autoScores && (
+          <p className="text-xs text-slate-400 mt-3">
+            A autoavaliação é uma referência declarada. A IA considera todas as respostas para estimar os eixos.
+          </p>
+        )}
       </div>
 
       <div className="bg-indigo-900 text-white p-8 rounded-3xl shadow-2xl mb-12">

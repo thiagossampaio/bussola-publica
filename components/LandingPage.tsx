@@ -41,6 +41,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
     nacional: 4.6,
   };
 
+  const sampleSelfScores = {
+    economico: 6,
+    social: 5,
+    cultural: 5,
+    nacional: 5,
+  };
+
   const sampleDistribution = [
     { label: 'Discordo', value: 22 },
     { label: 'Neutro', value: 31 },
@@ -121,9 +128,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
               </div>
               <div className="space-y-4">
                 {[
-                  { label: 'Economia', value: 'Social-democrata', color: 'bg-indigo-500' },
-                  { label: 'Sociedade', value: 'Libertário moderado', color: 'bg-emerald-500' },
-                  { label: 'Cultura', value: 'Progressista', color: 'bg-sky-500' },
+                  { label: 'Autoavaliação', value: 'Centro-direita', color: 'bg-amber-500' },
+                  { label: 'IA', value: 'Liberal moderado', color: 'bg-indigo-500' },
+                  { label: 'Convergência', value: 'Parcial', color: 'bg-emerald-500' },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between text-sm">
                     <span className="text-slate-500">{item.label}</span>
@@ -162,16 +169,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
         <div className="grid md:grid-cols-3 gap-6">
           {[
             {
+              title: 'Autoavaliação rápida',
+              description: 'Você declara sua posição política inicial para compararmos com a análise final.',
+            },
+            {
               title: 'Questionário multidimensional',
               description: 'Avalia economia, sociedade, cultura e visão nacional com perguntas equilibradas.',
             },
             {
-              title: 'Análise inteligente',
-              description: 'Modelos combinam pesos estatísticos com interpretação qualitativa da IA.',
-            },
-            {
-              title: 'Resultado explicável',
-              description: 'Entenda o que cada eixo significa e veja como suas respostas contribuíram.',
+              title: 'Resultado comparativo',
+              description: 'Veja a diferença entre sua percepção e a classificação gerada pela IA.',
             },
           ].map((item) => (
             <div key={item.title} className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 hover-lift">
@@ -275,7 +282,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
               </div>
               <span className="text-xs font-semibold text-slate-400">Dados simulados</span>
             </div>
-            <RadarVisualization scores={sampleScores} ariaLabel="Radar com perfil amostral por eixo político" />
+            <RadarVisualization
+              scores={sampleScores}
+              comparisonScores={sampleSelfScores}
+              comparisonLabel="Autoavaliação"
+              ariaLabel="Radar com perfil amostral por eixo político"
+            />
+            <div className="flex items-center justify-center gap-4 text-xs text-slate-400 mt-3">
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-indigo-600" aria-hidden="true"></span>
+                IA
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-amber-400" aria-hidden="true"></span>
+                Autoavaliação
+              </span>
+            </div>
           </div>
 
           <div className="bg-white border border-slate-100 rounded-3xl shadow-lg p-6 hover-lift">

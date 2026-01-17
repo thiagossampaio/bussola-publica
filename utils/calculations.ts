@@ -1,5 +1,5 @@
 
-import { UserAnswer, Question, Scores, PoliticalResult } from "../types";
+import { UserAnswer, Question, Scores, PoliticalResult, SelfPositioningSelection } from "../types";
 
 export const calculateLocalScores = (answers: UserAnswer[], questions: Question[]): Scores => {
   const scores: Scores = {
@@ -45,7 +45,11 @@ export const getClassificationFromScores = (scores: Scores): string => {
   return "Centro";
 };
 
-export const generateBackupResult = (answers: UserAnswer[], questions: Question[]): PoliticalResult => {
+export const generateBackupResult = (
+  answers: UserAnswer[],
+  questions: Question[],
+  selfPositioning?: SelfPositioningSelection | null
+): PoliticalResult => {
   const scores = calculateLocalScores(answers, questions);
   const classif = getClassificationFromScores(scores);
   return {
@@ -54,6 +58,7 @@ export const generateBackupResult = (answers: UserAnswer[], questions: Question[
     intensidade_geral: 5,
     analise_detalhada: "Esta análise foi gerada localmente como backup. Seus resultados sugerem um posicionamento equilibrado com nuances específicas em cada eixo avaliado.",
     figuras_similares: ["Figuras históricas variadas"],
-    confianca_classificacao: 70
+    confianca_classificacao: 70,
+    autoavaliacao: selfPositioning ?? null
   };
 };

@@ -1,5 +1,5 @@
 
-import { Question, Category } from './types';
+import { Question, Category, SelfPositioningOption } from './types';
 
 export const QUESTIONS: Question[] = [
   // Economia (0: Esquerda, 10: Direita)
@@ -350,4 +350,43 @@ export const LIKERT_OPTIONS = [
   { value: 3, label: "Neutro", color: "bg-slate-300" },
   { value: 4, label: "Concordo", color: "bg-emerald-300" },
   { value: 5, label: "Concordo Totalmente", color: "bg-emerald-500" },
+];
+
+export const SELF_POSITIONING_OPTIONS: SelfPositioningOption[] = [
+  {
+    id: 'esquerda',
+    label: 'Esquerda',
+    description: 'Ênfase em igualdade social e intervenção econômica do Estado.',
+    scores: { economico: 2.5, social: 5, cultural: 5, nacional: 5 }
+  },
+  {
+    id: 'centro_esquerda',
+    label: 'Centro-Esquerda',
+    description: 'Equilíbrio com viés social e políticas públicas ativas.',
+    scores: { economico: 4, social: 5, cultural: 5, nacional: 5 }
+  },
+  {
+    id: 'centro',
+    label: 'Centro',
+    description: 'Posição moderada e pragmática entre Estado e mercado.',
+    scores: { economico: 5, social: 5, cultural: 5, nacional: 5 }
+  },
+  {
+    id: 'centro_direita',
+    label: 'Centro-Direita',
+    description: 'Maior foco em mercado com responsabilidades sociais moderadas.',
+    scores: { economico: 6, social: 5, cultural: 5, nacional: 5 }
+  },
+  {
+    id: 'direita',
+    label: 'Direita',
+    description: 'Ênfase em livre mercado e menor intervenção estatal.',
+    scores: { economico: 7.5, social: 5, cultural: 5, nacional: 5 }
+  },
+  {
+    id: 'nao_sei',
+    label: 'Não sei / Prefiro não dizer',
+    description: 'Sem autoavaliação no momento.',
+    scores: null
+  }
 ];

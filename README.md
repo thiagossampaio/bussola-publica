@@ -37,9 +37,10 @@ O **Compass Político** foi projetado para oferecer uma experiência clara, educ
 ## Principais Funcionalidades
 
 - Questionário com escala Likert de 7 pontos e progressão por etapas temáticas
+- Etapa inicial de autoavaliação política para confronto com a análise final da IA
 - Salvamento automático de progresso e navegação retroativa
 - Integração com Google Gemini para análise semântica e explicações personalizadas
-- Resultados com gráfico radar, scores numéricos e classificação composta
+- Resultados com gráfico radar comparativo (autoavaliação vs IA), scores numéricos e classificação composta
 - Recursos de compartilhamento e geração de card social
 - Opção de refazer o teste e visualizar ranking global
 
@@ -110,6 +111,7 @@ GEMINI_API_KEY=YOUR_KEY_HERE
 - Pesos diferenciados por relevância teórica
 - Questões de controle para validação de consistência
 - Eixos principais: econômico, social, autoridade e global-nacional
+- Autoavaliação declarada no início para comparar percepção pessoal com a análise da IA
 
 ## Critérios de Privacidade e Segurança
 

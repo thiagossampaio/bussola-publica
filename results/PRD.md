@@ -74,6 +74,11 @@ O aplicativo utilizará um modelo multidimensional baseado em:
 - **RF004**: Botão CTA destacado: "Descobrir meu posicionamento"
 - **RF005**: Estimativa de tempo de conclusão (8-12 minutos)
 
+#### **Fase 1.5: Autoavaliação Inicial**
+- **RF005.1**: Etapa única antes do questionário para o usuário declarar seu posicionamento político
+- **RF005.2**: Opções simples e populares (Esquerda, Centro-Esquerda, Centro, Centro-Direita, Direita, Não sei/Prefiro não dizer)
+- **RF005.3**: Mensagem clara de que a autoavaliação será comparada ao resultado final da IA
+
 #### **Fase 2: Questionário**
 - **RF006**: 40-50 questões cientificamente validadas
 - **RF007**: Barra de progresso visual com etapas temáticas
@@ -93,6 +98,7 @@ O aplicativo utilizará um modelo multidimensional baseado em:
   - Todas as respostas do usuário
   - Framework de análise político
   - Instruções para classificação multidimensional
+  - Contexto da autoavaliação declarada do usuário
   - Requisição de scores de 0-10 para cada eixo
   - Requisição de explicação personalizada
 
@@ -102,6 +108,8 @@ O aplicativo utilizará um modelo multidimensional baseado em:
 - **RF021**: Scores numéricos (0-10) para cada dimensão
 - **RF022**: Classificação principal com descrição detalhada
 - **RF023**: Explicação personalizada gerada pelo Gemini (200-300 palavras)
+- **RF023.1**: Seção de confronto entre autoavaliação do usuário e análise final da IA
+- **RF023.2**: Indicação visual comparativa nos gráficos (autoavaliação vs IA)
 - **RF024**: Seção "O que isso significa?" com contexto histórico
 - **RF025**: Comparação com figuras políticas conhecidas (opcional)
 - **RF026**: Botão de compartilhamento social com card customizado

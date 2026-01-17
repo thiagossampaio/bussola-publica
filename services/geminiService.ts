@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { UserAnswer, Question, PoliticalResult } from "../types";
+import { UserAnswer, Question, PoliticalResult, SelfPositioningSelection } from "../types";
 
 // Removed global API_KEY constant to follow guidelines of using process.env.API_KEY directly in initialization
 
@@ -30,7 +30,8 @@ Mantenha uma linguagem acessível e neutra, sem influenciar a resposta do usuár
 
 export const analyzePoliticalPosition = async (
   answers: UserAnswer[],
-  questions: Question[]
+  questions: Question[],
+  selfPositioning?: SelfPositioningSelection | null
 ): Promise<PoliticalResult> => {
   // Always create a new instance right before the call
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -45,12 +46,22 @@ export const analyzePoliticalPosition = async (
     };
   });
 
+  const selfContext = selfPositioning
+    ? {
+        autoavaliacao: selfPositioning.label,
+        perfil_estimado: selfPositioning.scores
+      }
+    : "Não informado";
+
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
     contents: `Você é um cientista político renomado, formado pelas principais universidades do mundo, especializado em análise de espectro político e ideologias. Analise as respostas abaixo de um questionário político e forneça uma classificação detalhada.
 
 RESPOSTAS DO USUÁRIO:
 ${JSON.stringify(payload, null, 2)}
+
+AUTOAVALIAÇÃO DECLARADA PELO USUÁRIO:
+${JSON.stringify(selfContext, null, 2)}
 
 INSTRUÇÕES:
 1. Analise as respostas considerando múltiplas dimensões políticas:
@@ -63,6 +74,7 @@ INSTRUÇÕES:
 3. Identifique a classificação política principal.
 4. Forneça uma análise textual explicativa.
 5. Liste figuras políticas históricas similares.
+6. Considere a autoavaliação como contexto, sem enviesar os scores. Se houver convergência ou divergência relevante, explique de forma neutra na análise textual.
 
 FORMATO DE RESPOSTA (JSON):
 {

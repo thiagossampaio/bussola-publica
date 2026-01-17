@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
-import { AppState, UserAnswer, PoliticalResult, Question } from './types';
-import { QUESTIONS, buildQuestionnaireQuestions } from './constants';
+import { AppState, UserAnswer, PoliticalResult, Question, SelfPositioningSelection } from './types';
+import { QUESTIONS, buildQuestionnaireQuestions, SELF_POSITIONING_OPTIONS } from './constants';
 import LandingPage from './components/LandingPage';
 import Questionnaire from './components/Questionnaire';
 import Results from './components/Results';
 import RankingDashboard from './components/RankingDashboard';
+import SelfAssessment from './components/SelfAssessment';
 import { analyzePoliticalPosition } from './services/geminiService';
 import { generateBackupResult } from './utils/calculations';
 
@@ -14,12 +15,19 @@ const App: React.FC = () => {
   const [result, setResult] = useState<PoliticalResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [questionSet, setQuestionSet] = useState<Question[]>([]);
+  const [selfPositioning, setSelfPositioning] = useState<SelfPositioningSelection | null>(null);
 
   const startQuiz = () => {
+    setSelfPositioning(null);
     setState(AppState.CONSENT);
   };
 
   const handleConsent = () => {
+    setState(AppState.SELF_ASSESSMENT);
+  };
+
+  const handleSelfAssessment = (selection: SelfPositioningSelection) => {
+    setSelfPositioning(selection);
     setQuestionSet(buildQuestionnaireQuestions());
     setState(AppState.QUESTIONNAIRE);
   };
@@ -29,13 +37,13 @@ const App: React.FC = () => {
     try {
       const activeQuestions = questionSet.length ? questionSet : QUESTIONS;
       // Try Gemini Analysis
-      const analysis = await analyzePoliticalPosition(answers, activeQuestions);
-      setResult(analysis);
+      const analysis = await analyzePoliticalPosition(answers, activeQuestions, selfPositioning);
+      setResult({ ...analysis, autoavaliacao: selfPositioning });
       setState(AppState.RESULTS);
     } catch (err) {
       console.error("Gemini failed, using backup calculation", err);
-      const backup = generateBackupResult(answers, questionSet.length ? questionSet : QUESTIONS);
-      setResult(backup);
+      const backup = generateBackupResult(answers, questionSet.length ? questionSet : QUESTIONS, selfPositioning);
+      setResult({ ...backup, autoavaliacao: selfPositioning });
       setState(AppState.RESULTS);
     } finally {
       setIsLoading(false);
@@ -43,7 +51,12 @@ const App: React.FC = () => {
   };
 
   const viewRanking = () => setState(AppState.RANKING);
-  const goHome = () => setState(AppState.LANDING);
+  const goHome = () => {
+    setState(AppState.LANDING);
+    setResult(null);
+    setQuestionSet([]);
+    setSelfPositioning(null);
+  };
 
   const isLanding = state === AppState.LANDING;
 
@@ -136,6 +149,14 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {state === AppState.SELF_ASSESSMENT && (
+          <SelfAssessment
+            options={SELF_POSITIONING_OPTIONS}
+            onSelect={handleSelfAssessment}
+            onBack={() => setState(AppState.CONSENT)}
+          />
+        )}
+
         {state === AppState.QUESTIONNAIRE && (
           <Questionnaire
             questions={questionSet}
@@ -145,7 +166,7 @@ const App: React.FC = () => {
         )}
 
         {state === AppState.RESULTS && result && (
-          <Results result={result} onRestart={() => setState(AppState.LANDING)} onViewRanking={viewRanking} />
+          <Results result={result} onRestart={goHome} onViewRanking={viewRanking} />
         )}
 
         {state === AppState.RANKING && (

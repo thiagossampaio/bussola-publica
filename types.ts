@@ -23,6 +23,27 @@ export interface Scores {
   nacional: number;
 }
 
+export type SelfPositioningId =
+  | 'esquerda'
+  | 'centro_esquerda'
+  | 'centro'
+  | 'centro_direita'
+  | 'direita'
+  | 'nao_sei';
+
+export interface SelfPositioningOption {
+  id: SelfPositioningId;
+  label: string;
+  description: string;
+  scores: Scores | null;
+}
+
+export interface SelfPositioningSelection {
+  id: SelfPositioningId;
+  label: string;
+  scores: Scores | null;
+}
+
 export interface PoliticalResult {
   classificacao_principal: string;
   scores: Scores;
@@ -30,12 +51,14 @@ export interface PoliticalResult {
   analise_detalhada: string;
   figuras_similares: string[];
   confianca_classificacao: number;
+  autoavaliacao?: SelfPositioningSelection | null;
   timestamp?: number;
 }
 
 export enum AppState {
   LANDING = 'LANDING',
   CONSENT = 'CONSENT',
+  SELF_ASSESSMENT = 'SELF_ASSESSMENT',
   QUESTIONNAIRE = 'QUESTIONNAIRE',
   RESULTS = 'RESULTS',
   RANKING = 'RANKING'
