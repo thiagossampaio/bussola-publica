@@ -50,46 +50,49 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
   return (
     <div className="flex flex-col gap-24 pb-24">
       <section id="inicio" className="relative overflow-hidden">
-        <div className="absolute -top-24 right-0 h-72 w-72 bg-indigo-200/60 blur-[120px] rounded-full"></div>
-        <div className="absolute -bottom-24 left-0 h-72 w-72 bg-sky-200/60 blur-[120px] rounded-full"></div>
+        <div className="absolute -top-24 right-0 h-72 w-72 bg-indigo-200/60 blur-[120px] rounded-full animate-pulse-soft"></div>
+        <div className="absolute -bottom-24 left-0 h-72 w-72 bg-sky-200/60 blur-[120px] rounded-full animate-pulse-soft" style={{ animationDelay: '400ms' }}></div>
 
         <div className="relative max-w-6xl mx-auto px-6 py-16 md:py-24 grid gap-12 md:grid-cols-[1.1fr_0.9fr] items-center">
           <div className="text-left">
-            <div className="inline-flex items-center gap-2 bg-white/80 border border-indigo-100 text-indigo-700 px-4 py-2 rounded-full text-sm font-semibold shadow-sm">
+            <div
+              className="inline-flex items-center gap-2 bg-white/80 border border-indigo-100 text-indigo-700 px-4 py-2 rounded-full text-sm font-semibold shadow-sm animate-fade-in"
+              style={{ animationDelay: '80ms' }}
+            >
               <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
               IA aplicada à ciência política
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-bold text-slate-900 mt-6 tracking-tight">
+            <h1 className="text-4xl md:text-6xl font-bold text-slate-900 mt-6 tracking-tight animate-fade-in-up" style={{ animationDelay: '140ms' }}>
               Bússola <span className="text-indigo-600">Política AI</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mt-6 leading-relaxed">
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mt-6 leading-relaxed animate-fade-in-up" style={{ animationDelay: '220ms' }}>
               Descubra seu real posicionamento político através de um questionário multidimensional analisado por Inteligência Artificial avançada.
             </p>
 
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 w-full max-w-md">
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 w-full max-w-md animate-fade-in-up" style={{ animationDelay: '300ms' }}>
               <button
                 onClick={onStart}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-1 active:translate-y-0"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-1 active:translate-y-0 pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
               >
                 Iniciar Questionário
               </button>
               <button
                 onClick={onViewRanking}
-                className="flex-1 bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-8 rounded-xl border-2 border-slate-200 transition-all shadow-sm"
+                className="flex-1 bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-8 rounded-xl border-2 border-slate-200 transition-all shadow-sm pressable focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
               >
                 Ver Ranking Global
               </button>
             </div>
 
-            <div className="mt-12 flex flex-wrap items-center gap-6 text-slate-500">
+            <div className="mt-12 flex flex-wrap items-center gap-6 text-slate-500 animate-fade-in-up" style={{ animationDelay: '380ms' }}>
               <div className="flex -space-x-2">
                 {[1, 2, 3, 4].map((i) => (
                   <img
                     key={i}
                     src={`https://picsum.photos/32/32?random=${i}`}
-                    className="w-8 h-8 rounded-full border-2 border-white"
+                    className="w-8 h-8 rounded-full border-2 border-white transition-transform hover:-translate-y-0.5"
                     alt="Participante"
                   />
                 ))}
@@ -100,7 +103,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
           </div>
 
           <div className="flex flex-col gap-6">
-            <div className="bg-white/80 backdrop-blur-sm border border-slate-100 rounded-3xl shadow-xl p-6">
+            <div className="bg-white/80 backdrop-blur-sm border border-slate-100 rounded-3xl shadow-xl p-6 hover-lift animate-fade-in-up" style={{ animationDelay: '240ms' }}>
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <p className="text-xs font-semibold text-indigo-600">Prévia do resultado</p>
@@ -132,7 +135,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
                 { label: 'Precisão', value: 'IA + modelos' },
                 { label: 'Anonimato', value: '100%' },
               ].map((item) => (
-                <div key={item.label} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+                <div key={item.label} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover-lift animate-fade-in-up">
                   <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">{item.label}</p>
                   <p className="text-lg font-bold text-slate-800 mt-2">{item.value}</p>
                 </div>
@@ -165,7 +168,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
               description: 'Entenda o que cada eixo significa e veja como suas respostas contribuíram.',
             },
           ].map((item) => (
-            <div key={item.title} className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-shadow">
+            <div key={item.title} className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 hover-lift">
               <h3 className="text-lg font-bold text-slate-900 mb-3">{item.title}</h3>
               <p className="text-slate-600 leading-relaxed">{item.description}</p>
             </div>
@@ -195,7 +198,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
               ))}
             </div>
           </div>
-          <div className="bg-white border border-slate-100 rounded-3xl shadow-xl p-6">
+          <div className="bg-white border border-slate-100 rounded-3xl shadow-xl p-6 hover-lift">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-indigo-600">Metodologia aplicada</p>
@@ -240,7 +243,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
               description: 'Use linguagem precisa para discutir ideias com mais empatia.',
             },
           ].map((item) => (
-            <div key={item.title} className="bg-gradient-to-br from-white to-indigo-50 border border-indigo-100 rounded-3xl p-6">
+            <div key={item.title} className="bg-gradient-to-br from-white to-indigo-50 border border-indigo-100 rounded-3xl p-6 hover-lift transition-all hover:-translate-y-1">
               <h3 className="text-lg font-bold text-slate-900 mb-3">{item.title}</h3>
               <p className="text-slate-600 leading-relaxed">{item.description}</p>
             </div>
@@ -258,7 +261,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
         </div>
 
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8">
-          <div className="bg-white border border-slate-100 rounded-3xl shadow-lg p-6">
+          <div className="bg-white border border-slate-100 rounded-3xl shadow-lg p-6 hover-lift">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <p className="text-sm font-semibold text-indigo-600">Perfil amostral</p>
@@ -269,7 +272,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
             <RadarVisualization scores={sampleScores} />
           </div>
 
-          <div className="bg-white border border-slate-100 rounded-3xl shadow-lg p-6">
+          <div className="bg-white border border-slate-100 rounded-3xl shadow-lg p-6 hover-lift">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-semibold text-indigo-600">Resposta randômica</p>
@@ -296,7 +299,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
       </section>
 
       <section className="max-w-6xl mx-auto px-6">
-        <div className="bg-slate-900 text-white rounded-3xl px-8 py-12 flex flex-col lg:flex-row items-center justify-between gap-8">
+        <div className="bg-slate-900 text-white rounded-3xl px-8 py-12 flex flex-col lg:flex-row items-center justify-between gap-8 animate-fade-in-up">
           <div>
             <p className="text-sm font-semibold text-indigo-200 uppercase tracking-wide">Pronto para começar?</p>
             <h2 className="text-3xl font-bold mt-2">Descubra sua bússola política agora</h2>
@@ -307,13 +310,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <button
               onClick={onStart}
-              className="bg-white text-slate-900 font-bold py-3 px-6 rounded-xl shadow-md hover:bg-slate-100 transition"
+              className="bg-white text-slate-900 font-bold py-3 px-6 rounded-xl shadow-md hover:bg-slate-100 transition pressable focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
             >
               Iniciar Questionário
             </button>
             <button
               onClick={onViewRanking}
-              className="border border-white/40 text-white font-bold py-3 px-6 rounded-xl hover:bg-white/10 transition"
+              className="border border-white/40 text-white font-bold py-3 px-6 rounded-xl hover:bg-white/10 transition pressable focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
             >
               Ver Ranking Global
             </button>

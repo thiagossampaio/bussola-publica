@@ -71,7 +71,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, on
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       {/* Header / Progress */}
-      <div className="mb-8">
+      <div className="mb-8 animate-fade-in">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
             Pergunta {currentIndex + 1} de {questions.length}
@@ -80,14 +80,17 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, on
         </div>
         <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-indigo-600 transition-all duration-500 ease-out"
+            className="h-full bg-indigo-600 transition-all duration-500 ease-out progress-shimmer"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
       {/* Question Card */}
-      <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 min-h-[400px] flex flex-col">
+      <div
+        key={currentQuestion.id}
+        className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 min-h-[400px] flex flex-col animate-fade-in-up"
+      >
         <div className="flex justify-between items-start mb-6">
           <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold uppercase">
             {currentQuestion.category}
@@ -95,7 +98,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, on
           <button 
             onClick={handleHelp}
             disabled={loadingExpl}
-            className="flex items-center gap-1 text-slate-400 hover:text-indigo-600 transition-colors text-sm font-medium"
+            className="flex items-center gap-1 text-slate-400 hover:text-indigo-600 transition-colors text-sm font-medium pressable"
           >
             {loadingExpl ? (
               <svg className="animate-spin h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -116,7 +119,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, on
         </h2>
 
         {explanation && (
-          <div className="mb-8 p-4 bg-amber-50 rounded-xl border border-amber-100 text-amber-900 text-sm leading-relaxed">
+          <div className="mb-8 p-4 bg-amber-50 rounded-xl border border-amber-100 text-amber-900 text-sm leading-relaxed animate-fade-in">
             <h4 className="font-bold mb-2">Explicação do Cientista Político AI:</h4>
             <ReactMarkdown
               components={{
@@ -151,7 +154,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, on
             <button
               key={opt.value}
               onClick={() => handleAnswer(opt.value)}
-              className={`w-full py-4 px-6 rounded-xl border-2 transition-all text-left flex items-center justify-between group
+              className={`w-full py-4 px-6 rounded-xl border-2 transition-all text-left flex items-center justify-between group pressable hover:-translate-y-0.5
                 ${currentAnswer === opt.value 
                   ? 'border-indigo-600 bg-indigo-50 text-indigo-700' 
                   : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-indigo-200 hover:bg-white'}
@@ -164,17 +167,17 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ questions, onComplete, on
         </div>
       </div>
 
-      <div className="mt-8 flex justify-between items-center">
+      <div className="mt-8 flex justify-between items-center animate-fade-in">
         <button 
           onClick={handlePrev}
           disabled={currentIndex === 0}
-          className="px-6 py-2 text-slate-400 hover:text-slate-600 disabled:opacity-30 font-semibold"
+          className="px-6 py-2 text-slate-400 hover:text-slate-600 disabled:opacity-30 font-semibold pressable"
         >
           ← Voltar
         </button>
         <button 
           onClick={onCancel}
-          className="text-slate-400 hover:text-red-500 font-semibold transition-colors"
+          className="text-slate-400 hover:text-red-500 font-semibold transition-colors pressable"
         >
           Sair e Reiniciar
         </button>
