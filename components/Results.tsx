@@ -32,6 +32,88 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     nacional: 'Nacional'
   };
 
+  const axisInsights = useMemo(() => {
+    const axisMap: Array<{
+      key: keyof Scores;
+      label: string;
+      value: number;
+      insight: string;
+      strength: number;
+    }> = [
+      {
+        key: 'economico',
+        label: 'Economia',
+        value: result.scores.economico,
+        insight:
+          result.scores.economico >= 6.5
+            ? 'Preferência por mercado com menor intervenção estatal.'
+            : result.scores.economico <= 3.5
+              ? 'Preferência por Estado mais presente e políticas redistributivas.'
+              : 'Equilíbrio entre mercado e proteção social.',
+        strength: Math.abs(result.scores.economico - 5)
+      },
+      {
+        key: 'social',
+        label: 'Sociedade',
+        value: result.scores.social,
+        insight:
+          result.scores.social >= 6.5
+            ? 'Costumes mais conservadores e foco em estabilidade social.'
+            : result.scores.social <= 3.5
+              ? 'Valores progressistas e abertura a mudanças sociais.'
+              : 'Postura moderada em temas de costumes.',
+        strength: Math.abs(result.scores.social - 5)
+      },
+      {
+        key: 'cultural',
+        label: 'Cultura',
+        value: result.scores.cultural,
+        insight:
+          result.scores.cultural >= 6.5
+            ? 'Valoriza tradição, ordem e continuidade cultural.'
+            : result.scores.cultural <= 3.5
+              ? 'Apoia inovação cultural e pluralidade de estilos de vida.'
+              : 'Transita entre tradição e inovação com pragmatismo.',
+        strength: Math.abs(result.scores.cultural - 5)
+      },
+      {
+        key: 'nacional',
+        label: 'Nação',
+        value: result.scores.nacional,
+        insight:
+          result.scores.nacional >= 6.5
+            ? 'Prioriza soberania nacional e decisões internas.'
+            : result.scores.nacional <= 3.5
+              ? 'Abertura maior a cooperação e visão global.'
+              : 'Equilíbrio entre interesses nacionais e globais.',
+        strength: Math.abs(result.scores.nacional - 5)
+      }
+    ];
+
+    return axisMap.sort((a, b) => b.strength - a.strength).slice(0, 3);
+  }, [result.scores]);
+
+  const consistencyLabel = useMemo(() => {
+    if (result.confianca_classificacao >= 80) return 'Consistência alta';
+    if (result.confianca_classificacao >= 60) return 'Consistência moderada';
+    return 'Consistência baixa';
+  }, [result.confianca_classificacao]);
+
+  const rarityLabel = useMemo(() => {
+    if (result.intensidade_geral >= 7) return 'Perfil raro';
+    if (result.intensidade_geral >= 5) return 'Perfil distinto';
+    return 'Perfil moderado';
+  }, [result.intensidade_geral]);
+
+  const shareSummary = useMemo(() => {
+    const bullets = axisInsights.map((item) => `• ${item.insight}`).join('\n');
+    return [
+      `Meu perfil na Bússola Política AI: ${result.classificacao_principal}.`,
+      bullets,
+      'Descubra o seu e compare no ranking global.'
+    ].join('\n');
+  }, [axisInsights, result.classificacao_principal]);
+
   const comparisonNote = useMemo(() => {
     if (!autoavaliacao) {
       return "Você optou por não informar sua autoavaliação política.";
@@ -231,9 +313,15 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
       <header className="text-center mb-12">
         <h1 className="text-sm font-bold text-indigo-600 uppercase tracking-widest mb-2">Seu Perfil Político</h1>
         <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">{result.classificacao_principal}</h2>
-        <div className="flex justify-center items-center gap-2">
+        <div className="flex flex-wrap justify-center items-center gap-2">
           <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold">
             Confiança da IA: {result.confianca_classificacao}%
+          </span>
+          <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-bold">
+            {consistencyLabel}
+          </span>
+          <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-bold">
+            {rarityLabel}
           </span>
         </div>
       </header>
@@ -387,6 +475,59 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
         >
           Compartilhar resultado
         </button>
+      </div>
+
+      <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-2xl mb-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <p className="text-xs font-semibold text-indigo-200 uppercase tracking-wide">Resumo compartilhável</p>
+            <h3 className="text-2xl font-bold">Seu perfil em 3 insights</h3>
+          </div>
+          <span className="px-3 py-1 bg-white/10 text-indigo-100 rounded-full text-xs font-semibold">
+            Pronto para copiar
+          </span>
+        </div>
+        <div className="space-y-3 text-indigo-100">
+          {axisInsights.map((item) => (
+            <div key={item.key} className="flex items-start gap-3">
+              <span className="mt-1 h-2 w-2 rounded-full bg-indigo-300" aria-hidden="true"></span>
+              <p>
+                <span className="font-semibold">{item.label}:</span> {item.insight}
+              </p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={async () => {
+              if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(shareSummary);
+                setModal({
+                  title: "Resumo copiado",
+                  message: "Cole onde quiser e convide mais pessoas para responder.",
+                  variant: 'success'
+                });
+              } else {
+                setModal({
+                  title: "Não foi possível copiar",
+                  message: "Seu navegador não permite copiar automaticamente.",
+                  variant: 'error'
+                });
+              }
+            }}
+            className="flex-1 bg-white text-slate-900 font-bold py-3 rounded-2xl shadow-md transition-all hover:bg-slate-100"
+            type="button"
+          >
+            Copiar resumo
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex-1 border border-white/40 text-white font-bold py-3 rounded-2xl hover:bg-white/10 transition-all"
+            type="button"
+          >
+            Compartilhar agora
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">

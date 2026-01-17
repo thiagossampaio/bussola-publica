@@ -86,7 +86,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </h1>
 
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mt-6 leading-relaxed animate-fade-in-up" style={{ animationDelay: '220ms' }}>
-              Descubra seu real posicionamento político através de um questionário multidimensional analisado por Inteligência Artificial avançada.
+              Descubra seu real posicionamento político com um questionário multidimensional e receba um resumo pronto para compartilhar.
             </p>
 
             <div className="mt-10 flex flex-col gap-3 w-full max-w-md animate-fade-in-up" style={{ animationDelay: '300ms' }}>
@@ -165,7 +165,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 { label: 'Sem cadastro', value: 'Acesso imediato' },
                 { label: '100% gratuito', value: 'Sem paywall' },
                 { label: 'Anônimo', value: 'Dados agregados' },
-                { label: 'Resultado claro', value: 'Comparação IA' }
+                { label: 'Resultado claro', value: 'Resumo compartilhável' }
               ].map((item) => (
                 <div key={item.label} className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm">
                   <p className="text-slate-700 font-semibold">{item.label}</p>
@@ -237,13 +237,58 @@ const LandingPage: React.FC<LandingPageProps> = ({
               description: 'Avalia economia, sociedade, cultura e visão nacional com perguntas equilibradas.',
             },
             {
-              title: 'Resultado comparativo',
-              description: 'Veja a diferença entre sua percepção e a classificação gerada pela IA.',
+              title: 'Resumo pronto para compartilhar',
+              description: 'Receba 3 insights claros e um card para enviar ao seu círculo.',
             },
           ].map((item) => (
             <div key={item.title} className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 hover-lift">
               <h3 className="text-lg font-bold text-slate-900 mb-3">{item.title}</h3>
               <p className="text-slate-600 leading-relaxed">{item.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="eixos" className="max-w-6xl mx-auto px-6" aria-labelledby="eixos-titulo">
+        <div className="text-center mb-12">
+          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Entenda os eixos</p>
+          <h2 id="eixos-titulo" className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">O que cada dimensão revela</h2>
+          <p className="text-slate-600 mt-4 max-w-2xl mx-auto">
+            Micro-conteúdos neutros para ajudar você a interpretar seu resultado com clareza e responsabilidade.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { title: 'Economia', desc: 'Estado x Mercado: impostos, regulação e bem-estar social.' },
+            { title: 'Sociedade', desc: 'Liberdades civis, diversidade e valores sociais.' },
+            { title: 'Cultura', desc: 'Tradição x inovação: normas, mudanças e identidade.' },
+            { title: 'Nação', desc: 'Soberania x cooperação: visão nacional e global.' },
+          ].map((item) => (
+            <div key={item.title} className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 hover-lift">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">{item.title}</h3>
+              <p className="text-slate-600 leading-relaxed">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="novidades" className="max-w-6xl mx-auto px-6" aria-labelledby="novidades-titulo">
+        <div className="text-center mb-12">
+          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Novidades da fase 1</p>
+          <h2 id="novidades-titulo" className="text-3xl md:text-4xl font-bold text-slate-900 mt-2">Mais clareza, mais compartilhamento</h2>
+          <p className="text-slate-600 mt-4 max-w-2xl mx-auto">
+            Melhorias pensadas para elevar engajamento e conversão sem perder neutralidade.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { title: 'Resumo compartilhável', desc: 'Três insights objetivos para copiar e enviar rapidamente.' },
+            { title: 'Ranking com recorte temporal', desc: 'Acompanhe tendências em 7 e 30 dias além do total.' },
+            { title: 'Badges de perfil', desc: 'Consistência e raridade destacadas em seu resultado.' },
+          ].map((item) => (
+            <div key={item.title} className="bg-gradient-to-br from-white to-indigo-50 border border-indigo-100 rounded-3xl p-6 hover-lift transition-all hover:-translate-y-1">
+              <h3 className="text-lg font-bold text-slate-900 mb-3">{item.title}</h3>
+              <p className="text-slate-600 leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>

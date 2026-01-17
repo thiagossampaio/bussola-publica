@@ -41,7 +41,9 @@ O **Compass Político** foi projetado para oferecer uma experiência clara, educ
 - Salvamento automático de progresso e navegação retroativa
 - Integração com Google Gemini para análise semântica e explicações personalizadas
 - Resultados com gráfico radar comparativo (autoavaliação vs IA), scores numéricos e classificação composta
-- Recursos de compartilhamento e geração de card social
+- Resumo compartilhável com 3 insights e badge de consistência/raridade
+- Recursos de compartilhamento social e cópia rápida de resumo
+- Ranking global com recortes por período (7 dias, 30 dias, total)
 - Opção de refazer o teste e visualizar ranking global
 
 ## Arquitetura e Stack
@@ -135,20 +137,31 @@ GEMINI_API_KEY=YOUR_KEY_HERE
 
 ## Roadmap
 
-**Fase 1 (MVP)**
-- [x] Landing page básica e 30 questões essenciais
-- [x] Página de resultados com gráfico radar
+**Fase 1 — Pré-Eleições (0–6 semanas)**
+- Cartões sociais avançados com radar e chamada neutra de educação política
+- Perfil resumido compartilhável com 3 insights e consistência
+- Ranking com recortes temporais (7/30 dias)
+- Micro-conteúdos neutros sobre o significado de cada eixo
+- Badges de conclusão e raridade do perfil
 
-**Fase 2 (Aprimoramento)**
-- Questionário completo (45 questões, 4 eixos)
-- Ranking global com visualizações
+**Fase 2 — Temporada de Campanha (6–12 semanas)**
+- Comparador de temas (saúde, economia, educação, segurança) sem citar candidatos
+- Radar de prioridades pessoais e contraste com o perfil político
+- Mapa do Brasil (opt‑in) com distribuição agregada por UF
+- Modo debate saudável com explicações neutras de divergências
+- Timeline de mudança para quem refaz o teste
 
-**Fase 3 (Polimento)**
-- Questões abertas opcionais
-- [x] Acessibilidade completa e otimização de performance
-- [x] SEO
-- [x] PWA
-- [x] Animações e micro-interações
+**Fase 3 — Pico Eleitoral (12–20 semanas)**
+- Digest semanal de tendências agregadas
+- Comparação de clusters com linguagem neutra
+- Convite em grupo para comparação de médias
+- Cards especiais para stories (Instagram/WhatsApp)
+- Explicação do score e etiqueta de confiança
+
+**Fase 4 — Pós‑Eleições (20+ semanas)**
+- Análises históricas mensais do ranking
+- Biblioteca de conceitos políticos vinculados às perguntas
+- Painel de exportações agregadas para pesquisadores
 
 ## Contribuição
 

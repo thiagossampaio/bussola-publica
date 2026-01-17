@@ -1,17 +1,20 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { PoliticalResult, Scores } from '../types';
-import { subscribeToParticipations } from '../services/participationService';
+import { Scores } from '../types';
+import { ParticipationDoc, subscribeToParticipations } from '../services/participationService';
 
 interface RankingDashboardProps {
   onBack: () => void;
   onTakeQuiz: () => void;
 }
 
+type TimeRange = '7d' | '30d' | 'all';
+
 const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz }) => {
-  const [rankingData, setRankingData] = useState<PoliticalResult[]>([]);
+  const [rankingData, setRankingData] = useState<ParticipationDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   useEffect(() => {
     const unsubscribe = subscribeToParticipations(
@@ -29,23 +32,39 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
     return () => unsubscribe();
   }, []);
 
+  const filteredRanking = useMemo(() => {
+    if (timeRange === 'all') return rankingData;
+    const now = Date.now();
+    const rangeMs = timeRange === '7d' ? 7 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
+    return rankingData.filter((item) => {
+      const createdAt = Number.isFinite(item.createdAtMs) ? item.createdAtMs : 0;
+      return createdAt >= now - rangeMs;
+    });
+  }, [rankingData, timeRange]);
+
   const stats = useMemo(() => {
-    if (rankingData.length === 0) return null;
+    if (filteredRanking.length === 0) return null;
     
     const avgScores: Scores = {
-      economico: rankingData.reduce((acc, curr) => acc + curr.scores.economico, 0) / rankingData.length,
-      social: rankingData.reduce((acc, curr) => acc + curr.scores.social, 0) / rankingData.length,
-      cultural: rankingData.reduce((acc, curr) => acc + curr.scores.cultural, 0) / rankingData.length,
-      nacional: rankingData.reduce((acc, curr) => acc + curr.scores.nacional, 0) / rankingData.length,
+      economico: filteredRanking.reduce((acc, curr) => acc + curr.scores.economico, 0) / filteredRanking.length,
+      social: filteredRanking.reduce((acc, curr) => acc + curr.scores.social, 0) / filteredRanking.length,
+      cultural: filteredRanking.reduce((acc, curr) => acc + curr.scores.cultural, 0) / filteredRanking.length,
+      nacional: filteredRanking.reduce((acc, curr) => acc + curr.scores.nacional, 0) / filteredRanking.length,
     };
 
     const distributions: Record<string, number> = {};
-    rankingData.forEach(r => {
+    filteredRanking.forEach(r => {
       distributions[r.classificacao_principal] = (distributions[r.classificacao_principal] || 0) + 1;
     });
 
     return { avgScores, distributions };
-  }, [rankingData]);
+  }, [filteredRanking]);
+
+  const rangeLabel = useMemo(() => {
+    if (timeRange === '7d') return 'Últimos 7 dias';
+    if (timeRange === '30d') return 'Últimos 30 dias';
+    return 'Total acumulado';
+  }, [timeRange]);
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
@@ -59,7 +78,28 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
       </div>
 
       <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Dashboard de Rankings</h1>
-      <p className="text-slate-500 mb-12">Dados coletados de forma anônima entre todos os participantes.</p>
+      <p className="text-slate-500">Dados coletados de forma anônima entre todos os participantes.</p>
+      <div className="mt-6 mb-10 flex flex-wrap items-center gap-3">
+        {[
+          { id: '7d', label: '7 dias' },
+          { id: '30d', label: '30 dias' },
+          { id: 'all', label: 'Total' }
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setTimeRange(item.id as TimeRange)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border ${
+              timeRange === item.id
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-200 hover:text-indigo-600'
+            }`}
+            type="button"
+          >
+            {item.label}
+          </button>
+        ))}
+        <span className="text-xs text-slate-400 ml-auto">{rangeLabel}</span>
+      </div>
 
       {isLoading ? (
         <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200" role="status" aria-live="polite" aria-busy="true">
@@ -72,9 +112,9 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
             Participar mesmo assim
           </button>
         </div>
-      ) : rankingData.length === 0 ? (
+      ) : filteredRanking.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-          <p className="text-slate-400 text-lg mb-4">Ainda não temos dados suficientes no ranking.</p>
+          <p className="text-slate-400 text-lg mb-4">Ainda não temos dados suficientes para este recorte.</p>
           <button onClick={onTakeQuiz} className="text-indigo-600 font-bold underline decoration-2" type="button">
             Seja o primeiro a participar!
           </button>
@@ -87,7 +127,7 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
             <div className="space-y-4">
               {/* Cast Object.entries to ensure count is treated as number to fix arithmetic errors */}
               {(Object.entries(stats.distributions) as [string, number][]).sort((a,b) => b[1] - a[1]).map(([name, count]) => {
-                const percentage = (count / rankingData.length) * 100;
+                const percentage = (count / filteredRanking.length) * 100;
                 return (
                   <div key={name}>
                     <div className="flex justify-between text-sm mb-1">
@@ -129,7 +169,7 @@ const RankingDashboard: React.FC<RankingDashboardProps> = ({ onBack, onTakeQuiz 
               ))}
             </div>
             <p className="mt-8 text-xs text-slate-500 italic text-center">
-              Total de participações: {rankingData.length}
+              Participações no período: {filteredRanking.length}
             </p>
           </div>
         </div>
