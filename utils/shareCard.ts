@@ -51,3 +51,45 @@ export const buildShareCardSvg = (result: PoliticalResult, originLabel: string) 
     </svg>
   `;
 };
+
+export const buildStoryCardSvg = (result: PoliticalResult, originLabel: string) => {
+  const title = escapeXml(result.classificacao_principal);
+  const scores = [
+    { label: 'Economia', value: result.scores.economico },
+    { label: 'Sociedade', value: result.scores.social },
+    { label: 'Cultura', value: result.scores.cultural },
+    { label: 'Nacao', value: result.scores.nacional }
+  ];
+
+  const bars = scores
+    .map((item, index) => {
+      const y = 980 + index * 140;
+      const width = Math.round((item.value / 10) * 520);
+      return `
+        <text x="140" y="${y}" font-size="36" fill="#0f172a" font-family="Arial, sans-serif">${item.label}</text>
+        <rect x="140" y="${y + 20}" width="620" height="24" rx="12" fill="#e2e8f0"></rect>
+        <rect x="140" y="${y + 20}" width="${width}" height="24" rx="12" fill="#6366f1"></rect>
+        <text x="790" y="${y + 40}" font-size="28" fill="#475569" font-family="Arial, sans-serif">${formatScore(item.value)}</text>
+      `;
+    })
+    .join('');
+
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+      <defs>
+        <linearGradient id="bg-story" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#eef2ff" />
+          <stop offset="100%" stop-color="#f8fafc" />
+        </linearGradient>
+      </defs>
+      <rect width="1080" height="1920" fill="url(#bg-story)" />
+      <rect x="90" y="140" width="900" height="1640" rx="48" fill="#ffffff" stroke="#e2e8f0" />
+      <text x="140" y="260" font-size="28" fill="#6366f1" font-family="Arial, sans-serif">Bussola Politica AI</text>
+      <text x="140" y="360" font-size="64" fill="#0f172a" font-weight="700" font-family="Arial, sans-serif">${title}</text>
+      <text x="140" y="430" font-size="28" fill="#64748b" font-family="Arial, sans-serif">Perfil politico em 4 eixos</text>
+      ${bars}
+      <text x="140" y="1740" font-size="24" fill="#94a3b8" font-family="Arial, sans-serif">Descubra o seu em ${escapeXml(originLabel)}</text>
+      <text x="860" y="1740" font-size="24" fill="#94a3b8" font-family="Arial, sans-serif">2026</text>
+    </svg>
+  `;
+};

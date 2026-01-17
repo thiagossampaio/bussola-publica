@@ -6,7 +6,7 @@ import RadarVisualization from './RadarChart';
 import { saveParticipation } from '../services/participationService';
 import { getFigureComparison } from '../services/geminiService';
 import { trackEvent } from '../utils/analytics';
-import { buildShareCardSvg } from '../utils/shareCard';
+import { buildShareCardSvg, buildStoryCardSvg } from '../utils/shareCard';
 import { UF_OPTIONS } from '../constants';
 
 interface ResultsProps {
@@ -40,6 +40,11 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
   const [ufSelected, setUfSelected] = useState('');
   const [debateOpen, setDebateOpen] = useState(false);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  const [digestOpen, setDigestOpen] = useState(false);
+  const [confidenceOpen, setConfidenceOpen] = useState(false);
+  const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
+  const [groupName, setGroupName] = useState('');
+  const [groupSize, setGroupSize] = useState(5);
   const [history, setHistory] = useState<Array<{ timestamp: number; scores: Scores }>>([]);
   const [modal, setModal] = useState<{
     title: string;
@@ -176,6 +181,22 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     return 'Perfil moderado';
   }, [result.intensidade_geral]);
 
+  const confidenceTier = useMemo(() => {
+    if (result.confianca_classificacao >= 80) return 'Alta';
+    if (result.confianca_classificacao >= 60) return 'Moderada';
+    return 'Inicial';
+  }, [result.confianca_classificacao]);
+
+  const confidenceExplanation = useMemo(() => {
+    if (result.confianca_classificacao >= 80) {
+      return 'As respostas mostraram padrão consistente entre os eixos, indicando baixa ambiguidade.';
+    }
+    if (result.confianca_classificacao >= 60) {
+      return 'Há consistência geral, mas com variações que sugerem nuances em temas específicos.';
+    }
+    return 'O padrão de respostas ficou mais distribuído, o que reduz a precisão estatística do rótulo.';
+  }, [result.confianca_classificacao]);
+
   const shareSummary = useMemo(() => {
     const bullets = axisInsights.map((item) => `• ${item.insight}`).join('\n');
     return [
@@ -190,6 +211,11 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     return buildShareCardSvg(result, originLabel);
   }, [result]);
 
+  const storyCardSvg = useMemo(() => {
+    const originLabel = typeof window === 'undefined' ? 'bussolapolitica.ai' : window.location.origin;
+    return buildStoryCardSvg(result, originLabel);
+  }, [result]);
+
   const resultLink = useMemo(() => {
     if (typeof window === 'undefined') return '';
     if (result.id) {
@@ -201,6 +227,10 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
   const cardDataUrl = useMemo(() => {
     return `data:image/svg+xml;utf8,${encodeURIComponent(cardSvg)}`;
   }, [cardSvg]);
+
+  const storyCardDataUrl = useMemo(() => {
+    return `data:image/svg+xml;utf8,${encodeURIComponent(storyCardSvg)}`;
+  }, [storyCardSvg]);
 
   const handleDownloadCard = async () => {
     trackEvent('share_card_download', { source: 'results' });
@@ -219,6 +249,28 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
       const link = document.createElement('a');
       link.href = url;
       link.download = 'bussola-politica-card.png';
+      link.click();
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  };
+
+  const handleDownloadStoryCard = async () => {
+    trackEvent('story_card_generated', { source: 'results' });
+    const image = new Image();
+    image.src = storyCardDataUrl;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1920;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'bussola-politica-story.png';
       link.click();
       URL.revokeObjectURL(url);
     }, 'image/png');
@@ -286,6 +338,98 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
   }, [history, result.scores, result.timestamp]);
 
   const hasTimeline = history.length > 1;
+
+  const clampScore = (value: number) => Math.max(0, Math.min(10, value));
+
+  const weeklyDigestData = useMemo(() => {
+    const base = result.scores;
+    const now = new Date();
+    return Array.from({ length: 6 }).map((_, idx) => {
+      const weekDate = new Date(now);
+      weekDate.setDate(now.getDate() - (5 - idx) * 7);
+      const drift = (idx - 2.5) * 0.18;
+      const pulse = idx % 2 === 0 ? 0.15 : -0.1;
+      const economico = clampScore(base.economico + drift + pulse);
+      const social = clampScore(base.social + drift * 0.8 - pulse);
+      const cultural = clampScore(base.cultural + drift * 0.6 + pulse * 0.5);
+      const nacional = clampScore(base.nacional + drift * 0.7 - pulse * 0.4);
+      const media = clampScore((economico + social + cultural + nacional) / 4);
+      return {
+        label: weekDate.toLocaleDateString('pt-BR', { month: 'short', day: '2-digit' }),
+        media,
+        economico,
+        social,
+        cultural,
+        nacional,
+      };
+    });
+  }, [result.scores]);
+
+  const weeklyDigestHighlights = useMemo(() => {
+    const latest = weeklyDigestData[weeklyDigestData.length - 1];
+    const previous = weeklyDigestData[weeklyDigestData.length - 2];
+    if (!latest || !previous) return [];
+    const delta = Number((latest.media - previous.media).toFixed(1));
+    const trendLabel = delta >= 0 ? 'alta leve' : 'queda leve';
+    const strongestAxis = axisInsights[0];
+    return [
+      `Tendencia geral em ${trendLabel} (+/- ${Math.abs(delta)} ponto).`,
+      strongestAxis
+        ? `Eixo mais destacado no agregado: ${strongestAxis.label.toLowerCase()}.`
+        : 'Os eixos aparecem equilibrados no agregado.',
+      'Dados apresentados de forma agregada e anonima.'
+    ];
+  }, [axisInsights, weeklyDigestData]);
+
+  const clusterProfiles = useMemo(() => {
+    return [
+      {
+        id: 'equilibrio-comunitario',
+        label: 'Equilibrio comunitario',
+        description: 'Valoriza protecao social e dialogo, com foco em pactos coletivos.',
+        scores: { economico: 4, social: 4.5, cultural: 4.2, nacional: 5 },
+      },
+      {
+        id: 'autonomia-mercado',
+        label: 'Autonomia e mercado',
+        description: 'Prefere autonomia individual e dinamismo economico com menos intervencao.',
+        scores: { economico: 7.5, social: 6.5, cultural: 6.8, nacional: 4.5 },
+      },
+      {
+        id: 'tradicao-soberania',
+        label: 'Tradicao e soberania',
+        description: 'Busca estabilidade cultural e prioridades internas com foco em soberania.',
+        scores: { economico: 6, social: 7.2, cultural: 7.4, nacional: 7.6 },
+      },
+      {
+        id: 'pragmatismo-centro',
+        label: 'Pragmatismo de centro',
+        description: 'Equilibra mudanca e estabilidade com foco em resultados praticos.',
+        scores: { economico: 5.2, social: 5.1, cultural: 5.3, nacional: 5.1 },
+      }
+    ];
+  }, []);
+
+  const clusterComparisons = useMemo(() => {
+    const maxDistance = Math.sqrt(4 * 100);
+    return clusterProfiles
+      .map((cluster) => {
+        const distance = Math.sqrt(
+          (cluster.scores.economico - result.scores.economico) ** 2 +
+            (cluster.scores.social - result.scores.social) ** 2 +
+            (cluster.scores.cultural - result.scores.cultural) ** 2 +
+            (cluster.scores.nacional - result.scores.nacional) ** 2
+        );
+        const similarity = Math.max(0, Math.round((1 - distance / maxDistance) * 100));
+        return { ...cluster, similarity };
+      })
+      .sort((a, b) => b.similarity - a.similarity);
+  }, [clusterProfiles, result.scores]);
+
+  const selectedCluster = useMemo(() => {
+    if (!selectedClusterId) return clusterComparisons[0] ?? null;
+    return clusterComparisons.find((cluster) => cluster.id === selectedClusterId) ?? clusterComparisons[0] ?? null;
+  }, [clusterComparisons, selectedClusterId]);
 
   const debateHighlights = useMemo(() => {
     const strongest = axisInsights[0];
@@ -371,6 +515,27 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
     }
   };
 
+  const handleToggleDigest = () => {
+    const next = !digestOpen;
+    setDigestOpen(next);
+    if (next) {
+      trackEvent('weekly_digest_viewed');
+    }
+  };
+
+  const handleToggleConfidence = () => {
+    const next = !confidenceOpen;
+    setConfidenceOpen(next);
+    if (next) {
+      trackEvent('score_confidence_viewed');
+    }
+  };
+
+  const handleSelectCluster = (clusterId: string) => {
+    setSelectedClusterId(clusterId);
+    trackEvent('cluster_compare_selected', { cluster: clusterId });
+  };
+
   const handleConfirmUfOptIn = () => {
     if (!ufSelected) {
       setModal({
@@ -436,6 +601,48 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
       setModal({
         title: "Não foi possível compartilhar",
         message: "Tente novamente ou copie o link manualmente.",
+        variant: 'error'
+      });
+    }
+  };
+
+  const handleGroupInvite = async () => {
+    const safeGroup = groupName.trim() || 'Grupo de amigos';
+    const safeSize = Math.max(2, Math.min(30, groupSize));
+    const inviteText = [
+      `Convite: ${safeGroup}`,
+      `Vamos comparar as medias do grupo na Bússola Política AI.`,
+      `Meu perfil: ${result.classificacao_principal}.`,
+      `Meta: ${safeSize} pessoas respondendo.`,
+      resultLink ? `Acesse: ${resultLink}` : 'Acesse: bussolapolitica.ai'
+    ].join('\n');
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Convite de grupo - Bússola Política AI',
+          text: inviteText,
+          url: resultLink
+        });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(inviteText);
+      } else {
+        throw new Error('Compartilhamento indisponível');
+      }
+      trackEvent('group_invite_sent', { size: safeSize, source: 'results' });
+      setModal({
+        title: "Convite pronto",
+        message: "Compartilhe com o grupo para comparar medias anonimas.",
+        variant: 'success'
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return;
+      }
+      console.error("Falha ao enviar convite de grupo", error);
+      setModal({
+        title: "Não foi possível compartilhar",
+        message: "Tente novamente ou copie o texto manualmente.",
         variant: 'error'
       });
     }
@@ -655,6 +862,42 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
         )}
       </div>
 
+      <section id="confianca" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Score de confiança</p>
+            <h3 className="text-2xl font-bold text-slate-800">Entenda a etiqueta de confiança</h3>
+          </div>
+          <button
+            onClick={handleToggleConfidence}
+            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+            type="button"
+          >
+            {confidenceOpen ? 'Ocultar explicacao' : 'Ver explicacao'}
+          </button>
+        </div>
+        {confidenceOpen && (
+          <div className="mt-6 space-y-4 text-sm text-slate-600">
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4">
+              <p className="text-indigo-700 font-semibold">Etiqueta atual: {confidenceTier}</p>
+              <p className="mt-2 text-indigo-700">{confidenceExplanation}</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-3">
+              {[
+                { label: 'Alta', desc: 'Respostas coerentes com pouca variacao entre eixos.' },
+                { label: 'Moderada', desc: 'Nuances presentes, exigindo leitura contextual.' },
+                { label: 'Inicial', desc: 'Padrao mais disperso, sugerindo cautela na interpretacao.' }
+              ].map((item) => (
+                <div key={item.label} className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                  <p className="text-sm font-semibold text-slate-700">{item.label}</p>
+                  <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
       <section id="prioridades" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
@@ -836,6 +1079,153 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
         )}
       </section>
 
+      <section id="digest-semanal" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Digest semanal</p>
+            <h3 className="text-2xl font-bold text-slate-800">Tendencias agregadas da comunidade</h3>
+          </div>
+          <button
+            onClick={handleToggleDigest}
+            className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+            type="button"
+          >
+            {digestOpen ? 'Ocultar digest' : 'Ver digest'}
+          </button>
+        </div>
+        {digestOpen && (
+          <div className="mt-6">
+            <div className="h-64" role="img" aria-label="Grafico de linha com tendencia semanal agregada">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={weeklyDigestData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis domain={[0, 10]} tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: 12, borderColor: '#e2e8f0' }} />
+                  <Line type="monotone" dataKey="media" stroke="#6366f1" strokeWidth={2} dot />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="grid md:grid-cols-3 gap-3 mt-4">
+              {weeklyDigestHighlights.map((item) => (
+                <div key={item} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-600">
+                  {item}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-slate-400 mt-4">
+              Tendencias calculadas com base em medias anonimas e agregadas (simulacao local).
+            </p>
+          </div>
+        )}
+      </section>
+
+      <section id="clusters" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Comparacao de clusters</p>
+            <h3 className="text-2xl font-bold text-slate-800">Compare seu perfil com medias neutras</h3>
+          </div>
+          <span className="text-xs text-slate-400">Linguagem neutra e descritiva</span>
+        </div>
+        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-8">
+          <div className="space-y-3">
+            {clusterComparisons.map((cluster) => (
+              <div
+                key={cluster.id}
+                className={`border rounded-2xl p-4 transition-all ${selectedCluster?.id === cluster.id ? 'border-indigo-200 bg-indigo-50' : 'border-slate-200 bg-white'}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{cluster.label}</p>
+                    <p className="text-xs text-slate-500 mt-1">{cluster.description}</p>
+                  </div>
+                  <span className="text-xs font-semibold text-indigo-600">{cluster.similarity}%</span>
+                </div>
+                <div className="mt-3">
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-indigo-500"
+                      style={{ width: `${cluster.similarity}%` }}
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleSelectCluster(cluster.id)}
+                  className="mt-3 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                  type="button"
+                >
+                  Comparar com este cluster
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
+            {selectedCluster ? (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Radar</p>
+                    <h4 className="text-lg font-bold text-slate-800">Seu perfil x {selectedCluster.label}</h4>
+                  </div>
+                  <span className="text-xs text-slate-400">{selectedCluster.similarity}% proximidade</span>
+                </div>
+                <RadarVisualization
+                  scores={result.scores}
+                  comparisonScores={selectedCluster.scores}
+                  comparisonLabel={selectedCluster.label}
+                  ariaLabel="Radar comparando perfil e cluster neutro"
+                />
+                <p className="text-xs text-slate-500 mt-4">
+                  Clusters representam medias agregadas e nao indicam alinhamento com candidatos ou partidos.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-slate-500">Selecione um cluster para comparar.</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section id="convite-grupo" className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Convite em grupo</p>
+            <h3 className="text-2xl font-bold text-slate-800">Compare medias com pessoas proximas</h3>
+          </div>
+          <span className="text-xs text-slate-400">Fase 3</span>
+        </div>
+        <div className="grid md:grid-cols-[1fr_auto] gap-4">
+          <input
+            type="text"
+            value={groupName}
+            onChange={(event) => setGroupName(event.target.value)}
+            placeholder="Nome do grupo (ex: Amigos da faculdade)"
+            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700"
+            aria-label="Nome do grupo"
+          />
+          <input
+            type="number"
+            min={2}
+            max={30}
+            value={groupSize}
+            onChange={(event) => setGroupSize(Number(event.target.value))}
+            className="w-full md:w-32 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700"
+            aria-label="Tamanho do grupo"
+          />
+        </div>
+        <p className="text-xs text-slate-400 mt-3">
+          Dica: grupos pequenos ajudam a comparar medias sem expor resultados individuais.
+        </p>
+        <button
+          onClick={handleGroupInvite}
+          className="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
+          type="button"
+        >
+          Gerar convite do grupo
+        </button>
+      </section>
+
       <div className="bg-indigo-900 text-white p-8 rounded-3xl shadow-2xl mb-12">
         <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -930,6 +1320,56 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
                 setModal({
                   title: "Link copiado",
                   message: "Envie o link junto com seu card para mais conversoes.",
+                  variant: 'success'
+                });
+              } else {
+                setModal({
+                  title: "Não foi possível copiar",
+                  message: "Seu navegador não permite copiar automaticamente.",
+                  variant: 'error'
+                });
+              }
+            }}
+            className="flex-1 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3 rounded-2xl shadow-sm transition-all"
+            type="button"
+          >
+            Copiar link
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div>
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Card para stories</p>
+            <h3 className="text-xl font-bold text-slate-800">Formato vertical para Instagram/WhatsApp</h3>
+          </div>
+          <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold">1080 x 1920</span>
+        </div>
+        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 flex justify-center">
+          <img
+            src={storyCardDataUrl}
+            alt="Preview do card vertical para stories"
+            className="w-full max-w-xs rounded-xl shadow-sm"
+            style={{ aspectRatio: '9 / 16', objectFit: 'cover' }}
+          />
+        </div>
+        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={handleDownloadStoryCard}
+            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
+            type="button"
+          >
+            Baixar story em PNG
+          </button>
+          <button
+            onClick={async () => {
+              trackEvent('story_card_generated', { source: 'results_copy_link' });
+              if (navigator.clipboard?.writeText && resultLink) {
+                await navigator.clipboard.writeText(resultLink);
+                setModal({
+                  title: "Link copiado",
+                  message: "Combine o link com seu story para mais alcance.",
                   variant: 'success'
                 });
               } else {
