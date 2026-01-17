@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { QUESTIONS, LIKERT_OPTIONS } from '../constants';
 import { UserAnswer, Question } from '../types';
 import { getQuestionExplanation } from '../services/geminiService';
@@ -108,9 +109,33 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete, onCancel }) =
         </h2>
 
         {explanation && (
-          <div className="mb-8 p-4 bg-amber-50 rounded-xl border border-amber-100 text-amber-900 text-sm leading-relaxed whitespace-pre-wrap">
-            <h4 className="font-bold mb-1">Explicação do Cientista Político AI:</h4>
-            {explanation}
+          <div className="mb-8 p-4 bg-amber-50 rounded-xl border border-amber-100 text-amber-900 text-sm leading-relaxed">
+            <h4 className="font-bold mb-2">Explicação do Cientista Político AI:</h4>
+            <ReactMarkdown
+              components={{
+                h1: ({ children }) => <h1 className="text-lg font-bold text-amber-900 mb-2">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-base font-bold text-amber-900 mb-2">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-sm font-semibold text-amber-900 mb-2">{children}</h3>,
+                p: ({ children }) => <p className="text-amber-900 mb-3 last:mb-0">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc pl-5 mb-3 text-amber-900">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 text-amber-900">{children}</ol>,
+                li: ({ children }) => <li className="mb-1">{children}</li>,
+                strong: ({ children }) => <strong className="font-semibold text-amber-900">{children}</strong>,
+                em: ({ children }) => <em className="italic text-amber-900">{children}</em>,
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-2 border-amber-300 pl-3 italic text-amber-900/90 mb-3">
+                    {children}
+                  </blockquote>
+                ),
+                code: ({ children }) => (
+                  <code className="px-1 py-0.5 rounded bg-amber-100 text-amber-900 text-xs font-mono">
+                    {children}
+                  </code>
+                )
+              }}
+            >
+              {explanation}
+            </ReactMarkdown>
           </div>
         )}
 

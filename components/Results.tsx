@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { PoliticalResult, Scores } from '../types';
 import RadarVisualization from './RadarChart';
 import { saveParticipation } from '../services/participationService';
+import { getFigureComparison } from '../services/geminiService';
 
 interface ResultsProps {
   result: PoliticalResult;
@@ -13,6 +14,9 @@ interface ResultsProps {
 const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) => {
   const [showFullAnalysis, setShowFullAnalysis] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [analysisTarget, setAnalysisTarget] = useState<string | null>(null);
+  const [analysisText, setAnalysisText] = useState<string | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
   const [modal, setModal] = useState<{
     title: string;
     message: string;
@@ -48,6 +52,27 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
   };
 
   const closeModal = () => setModal(null);
+  const closeAnalysisModal = () => {
+    setAnalysisTarget(null);
+    setAnalysisText(null);
+    setAnalysisLoading(false);
+  };
+
+  const handleFigureAnalysis = async (figure: string) => {
+    if (analysisLoading) return;
+    setAnalysisTarget(figure);
+    setAnalysisText(null);
+    setAnalysisLoading(true);
+    try {
+      const text = await getFigureComparison(result, figure);
+      setAnalysisText(text);
+    } catch (error) {
+      console.error("Falha ao gerar comparação com Gemini", error);
+      setAnalysisText("Não foi possível gerar a explicação agora. Tente novamente.");
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 animate-in fade-in duration-1000">
@@ -94,6 +119,49 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
               <button
                 onClick={closeModal}
                 className="flex-1 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3 rounded-2xl shadow-sm transition-all"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {analysisTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeAnalysisModal} />
+          <div className="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-slate-100 p-8">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-fuchsia-500 text-white flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l1.9 4.2L18 8.1l-4.1 1.1L12 14l-1.9-4.8L6 8.1l4.1-1.9L12 2z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-slate-900">Gemini: comparação com {analysisTarget}</h3>
+                <p className="text-slate-600 mt-1">
+                  {analysisLoading ? "Analisando..." : "Explicação gerada com base no seu resultado."}
+                </p>
+              </div>
+            </div>
+            <div className="mt-6">
+              {analysisLoading ? (
+                <div className="flex items-center gap-3 text-indigo-600">
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="font-semibold">Gerando comparação...</span>
+                </div>
+              ) : (
+                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                  {analysisText}
+                </p>
+              )}
+            </div>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={closeAnalysisModal}
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-2xl shadow-md transition-all"
               >
                 Fechar
               </button>
@@ -179,9 +247,27 @@ const Results: React.FC<ResultsProps> = ({ result, onRestart, onViewRanking }) =
         <h3 className="text-xl font-bold text-slate-800 mb-6">Figuras Alinhadas</h3>
         <div className="flex flex-wrap gap-3">
           {result.figuras_similares.map((fig, idx) => (
-            <span key={idx} className="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl font-medium border border-slate-200">
-              {fig}
-            </span>
+            <div key={idx} className="flex items-center gap-2 bg-slate-100 text-slate-700 px-3 py-2 rounded-xl font-medium border border-slate-200">
+              <span>{fig}</span>
+              <button
+                onClick={() => handleFigureAnalysis(fig)}
+                disabled={analysisLoading}
+                className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-fuchsia-500 text-white flex items-center justify-center shadow-sm hover:shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                aria-label={`Comparar com Gemini: ${fig}`}
+                title="Comparar com Gemini"
+              >
+                {analysisLoading && analysisTarget === fig ? (
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l1.9 4.2L18 8.1l-4.1 1.1L12 14l-1.9-4.8L6 8.1l4.1-1.9L12 2z" />
+                  </svg>
+                )}
+              </button>
+            </div>
           ))}
         </div>
       </div>

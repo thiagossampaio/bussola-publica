@@ -111,3 +111,39 @@ FORMATO DE RESPOSTA (JSON):
 
   return JSON.parse(response.text || "{}");
 };
+
+export const getFigureComparison = async (
+  result: PoliticalResult,
+  figureName: string
+): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const payload = {
+    classificacao_principal: result.classificacao_principal,
+    scores: result.scores,
+    intensidade_geral: result.intensidade_geral,
+    analise_detalhada: result.analise_detalhada,
+    confianca_classificacao: result.confianca_classificacao
+  };
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Você é um cientista político didático e imparcial. Compare o resultado do usuário com a figura abaixo.
+
+FIGURA:
+${figureName}
+
+RESULTADO DO USUÁRIO (JSON):
+${JSON.stringify(payload, null, 2)}
+
+INSTRUÇÕES:
+- Explique em 2 a 4 parágrafos, de forma clara e neutra.
+- Compare em termos de eixos e tendências gerais (econômico, social/autoridade, cultural, nacional).
+- Se houver incerteza sobre a figura, deixe explícito que a comparação é aproximada.
+- Não faça julgamento moral e não exagere similaridades.`,
+    config: {
+      thinkingConfig: { thinkingBudget: 0 }
+    }
+  });
+
+  return response.text || "Desculpe, não consegui gerar a explicação agora.";
+};
