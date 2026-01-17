@@ -1,4 +1,4 @@
-import { addDoc, collection, onSnapshot, query } from 'firebase/firestore';
+import { addDoc, collection, getCountFromServer, onSnapshot, query } from 'firebase/firestore';
 import { db } from './firebase';
 import { PoliticalResult } from '../types';
 
@@ -53,4 +53,9 @@ export const subscribeToParticipations = (
       onError(error);
     }
   );
+};
+
+export const getParticipationCount = async () => {
+  const snapshot = await getCountFromServer(collection(db, PARTICIPATION_COLLECTION));
+  return snapshot.data().count;
 };

@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { AppState } from '../types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { getParticipationCount } from '../services/participationService';
 
 interface LandingPageProps {
   onStart: () => void;
@@ -8,6 +8,30 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => {
+  const [participationCount, setParticipationCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    getParticipationCount()
+      .then((count) => {
+        if (isMounted) setParticipationCount(count);
+      })
+      .catch((error) => {
+        console.error("Falha ao carregar contagem do Firestore", error);
+        if (isMounted) setParticipationCount(null);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const countLabel = useMemo(() => {
+    if (participationCount === null) return "Muitas pessoas já responderam";
+    const formatted = new Intl.NumberFormat('pt-BR').format(participationCount);
+    return `${formatted} pessoas já responderam`;
+  }, [participationCount]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
       <div className="bg-indigo-600 p-4 rounded-2xl mb-8 shadow-xl shadow-indigo-200">
@@ -45,7 +69,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onViewRanking }) => 
             <img key={i} src={`https://picsum.photos/32/32?random=${i}`} className="w-8 h-8 rounded-full border-2 border-white" alt="User" />
           ))}
         </div>
-        <span>+10.000 pessoas já responderam</span>
+        <span>+{countLabel}</span>
       </div>
     </div>
   );
