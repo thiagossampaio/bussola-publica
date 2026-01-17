@@ -2,6 +2,16 @@
   "name": "bússola-política-ai",
   "private": true,
   "version": "0.0.0",
+  "description": "Aplicação web para descobrir posicionamento político com análise via IA.",
+  "license": "MIT",
+  "keywords": [
+    "politica",
+    "questionario",
+    "react",
+    "vite",
+    "pwa",
+    "gemini"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

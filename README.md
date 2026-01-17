@@ -13,7 +13,7 @@ Aplicação web responsiva que ajuda usuários a descobrirem seu posicionamento 
 - [Arquitetura e Stack](#arquitetura-e-stack)
 - [Requisitos](#requisitos)
 - [Como Executar Localmente](#como-executar-localmente)
-- [Configuração do Gemini](#configuração-do-gemini)
+- [Variáveis de Ambiente](#variáveis-de-ambiente)
 - [Estrutura de Pastas](#estrutura-de-pastas)
 - [Metodologia do Questionário](#metodologia-do-questionário)
 - [Critérios de Privacidade e Segurança](#critérios-de-privacidade-e-segurança)
@@ -21,6 +21,8 @@ Aplicação web responsiva que ajuda usuários a descobrirem seu posicionamento 
 - [Scripts Disponíveis](#scripts-disponíveis)
 - [Roadmap](#roadmap)
 - [Contribuição](#contribuição)
+- [Suporte](#suporte)
+- [Segurança](#segurança)
 - [Licença](#licença)
 
 ## Visão Geral
@@ -44,17 +46,19 @@ O **Compass Político** foi projetado para oferecer uma experiência clara, educ
 ## Arquitetura e Stack
 
 **Frontend**
-- HTML5 + CSS3 (Grid/Flexbox, variáveis CSS, animações)
-- JavaScript (ES6+), módulos e async/await
+- React + TypeScript
+- Vite (build e dev server)
+- CSS moderno (Grid/Flexbox, variáveis CSS, animações)
 
 **Integrações**
 - Google Gemini API (Google AI Studio)
+- Firebase Firestore (ranking global)
 - LocalStorage para progresso
 
-**Bibliotecas recomendadas (CDN)**
-- Chart.js (visualizações de dados)
-- Marked.js (renderização de Markdown)
-- HTML2Canvas (captura de resultados)
+**Bibliotecas**
+- Recharts (visualizações de dados)
+- React Markdown (renderização de conteúdo)
+- Vite PWA (suporte a Progressive Web App)
 
 ## Requisitos
 
@@ -69,41 +73,35 @@ O **Compass Político** foi projetado para oferecer uma experiência clara, educ
 3. Inicie o ambiente de desenvolvimento:
    `npm run dev`
 
-## Configuração do Gemini
+## Variáveis de Ambiente
 
-O projeto utiliza o Google AI Studio com o modelo `gemini-pro`.
+Crie um arquivo `.env.local` com base no `env.example`:
 
-Exemplo de integração:
-
-```javascript
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-async function analyzeResponses(userResponses) {
-  const prompt = `[Prompt estruturado com respostas]`;
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  return parseResults(response.text());
-}
 ```
+GEMINI_API_KEY=YOUR_KEY_HERE
+```
+
+> A chave do Gemini é usada no frontend; para cenários com requisitos rígidos de segurança, considere um backend proxy para proteger o segredo.
 
 ## Estrutura de Pastas
 
-> Ajuste esta seção conforme a organização real do repositório.
-
 ```
 /
+├─ components/
+├─ data/
+├─ prompts/
 ├─ public/
-├─ src/
-│  ├─ components/
-│  ├─ pages/
-│  ├─ services/
-│  └─ styles/
 ├─ results/
-│  └─ PRD.md
-└─ README.md
+├─ services/
+├─ utils/
+├─ App.tsx
+├─ index.tsx
+├─ index.css
+├─ constants.tsx
+├─ types.ts
+├─ metadata.json
+├─ package.json
+└─ vite.config.ts
 ```
 
 ## Metodologia do Questionário
@@ -117,7 +115,7 @@ async function analyzeResponses(userResponses) {
 
 - Dados anonimizados e sem coleta de informações pessoais identificáveis
 - Uso de HTTPS obrigatório
-- Chaves de API protegidas (não expostas no frontend)
+- Para proteger chaves sensíveis, prefira um backend proxy quando possível
 - Conformidade com LGPD e GDPR (quando aplicável)
 
 ## Acessibilidade e Responsividade
@@ -152,10 +150,16 @@ async function analyzeResponses(userResponses) {
 
 ## Contribuição
 
-1. Faça um fork do repositório
-2. Crie uma branch a partir de `main`
-3. Abra um Pull Request descrevendo o contexto e as mudanças
+Consulte o guia em `CONTRIBUTING.md` e o `CODE_OF_CONDUCT.md` antes de abrir PRs.
+
+## Suporte
+
+Use as issues do GitHub para dúvidas, bugs e solicitações de melhoria.
+
+## Segurança
+
+Para relatar vulnerabilidades, siga as instruções de `SECURITY.md`.
 
 ## Licença
 
-Defina a licença do projeto (ex: MIT) neste arquivo e atualize esta seção.
+Licença MIT. Consulte `LICENSE`.
